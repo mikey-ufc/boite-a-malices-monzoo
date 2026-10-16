@@ -9,13 +9,11 @@
 // @supportURL		https://github.com/mikey-ufc/boite-a-malices-monzoo/issues
 // @updateURL		https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/aide_monzoo.user.js
 // @downloadURL		https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/aide_monzoo.user.js
-// @connect			montdm.free.fr
 // @grant			GM_addStyle
 // @grant			GM_getValue
 // @grant			GM_setValue
 // @grant			GM_deleteValue
 // @grant			GM_listValues
-// @grant			GM_xmlhttpRequest
 // @grant			unsafeWindow
 // @run-at			document-end
 // @noframes
@@ -3145,12 +3143,7 @@ var RES_CSS_UI="/*! jQuery UI - v1.12.0 - 2016-07-08\n* http://jqueryui.com\n* I
 /* ===== Adaptation Tampermonkey (Brave / Chromium) =====
  * - jQuery 3.2.1, jQuery UI 1.12.1 (thème humanity), flot 0.8.2-alpha et toutes les images sont intégrés
  *   plus bas : plus aucune dépendance à un serveur externe.
- * - SERVEUR_AUTEUR : false = aucun appel vers montdm.free.fr (vérification de version, rapport, montant bancaire).
  */
-var SERVEUR_AUTEUR = false;
-function requeteAuteur(options) {
-    if (SERVEUR_AUTEUR) GM_xmlhttpRequest(options);
-}
 function GM_getResourceURL(nom) {
     return RES_IMAGES[nom] || "";
 }
@@ -3358,25 +3351,6 @@ function formaterNombre(nombre) {
     nombre = String(nombre);
     for (var motif = /(\d+)(\d{3})/; motif.test(nombre);) nombre = nombre.replace(motif, "$1 $2");
     return nombre;
-}
-function verifierMiseAJour() {
-    var urlServeur = "http://montdm.free.fr/ScrptMonZoo/";
-    requeteAuteur({
-        method: "POST",
-        url: urlServeur + "versionM.php",
-        data: "",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-        },
-        onload: function (reponse) {
-            if (200 == reponse.status) {
-                var versionServeur = String(reponse.responseText);
-                parseInt(versionScript.replace(/\./g, "")) < parseInt(versionServeur.replace(/\./g, "")) &&
-                confirm("La version " + versionServeur + " de l'aide_monzoo est disponible.\n\nMettre à jour maintenant ?") &&
-                (window.location.href = urlServeur + "dnM.php");
-            }
-        },
-    });
 }
 function lireNomZoo() {
     var elements,
@@ -9726,29 +9700,7 @@ if (
                     var divTitreEnclos, codesEnclos;
                     switch (objetTemp) {
                         case "savane":
-                            ((codesEnclos = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 41, 42, 43, 44, 45]),
-                                requeteAuteur({
-                                    method: "POST",
-                                    url: "http://montdm.free.fr/ScrptMonZoo/rapportM.php",
-                                    data:
-                                        "nom=" +
-                                        nomZoo +
-                                        "&auj=" +
-                                        dateJeu +
-                                        "/" +
-                                        (-1 != parc.infoscan.type_mise_a_jour.indexOf("mi") ? "1" : "2") +
-                                        (-1 != parc.infoscan.type_mise_a_jour.indexOf("bonus")
-                                            ? "b" + parc.infoscan.type_mise_a_jour.substring(7)
-                                            : "") +
-                                        "&rs=" +
-                                        versionScript,
-                                    headers: {
-                                        "Content-Type": "application/x-www-form-urlencoded",
-                                    },
-                                    onload: function (e) {
-                                        e.status;
-                                    },
-                                }));
+                            codesEnclos = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 41, 42, 43, 44, 45];
                             break;
                         case "bassin":
                             codesEnclos = [10, 11, 12, 13, 14, 15, 46, 47, 48, 49, 50];
@@ -10034,7 +9986,6 @@ if (
             ),
                 (fenetreHeure.style.top = (window.innerHeight - fenetreHeure.clientHeight) / 2 + "px"),
                 parBalise("button", fenetreHeure)[1].focus(),
-                verifierMiseAJour(),
                 window.setTimeout(rechargerAccueil, delaiRechargement));
     }
 nomZoo &&
