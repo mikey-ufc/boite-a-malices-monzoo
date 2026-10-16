@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
-// @namespace		http://montdm.free.fr/ScrptMonZoo/
+// @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
 // @version			3.14.2
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey : bibliothèques et images intégrées)

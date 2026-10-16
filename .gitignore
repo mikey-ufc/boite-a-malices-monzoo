@@ -1,0 +1,5 @@
+.idea/
+
+# Données privées
+*.db
+monzoo_donnees.json
