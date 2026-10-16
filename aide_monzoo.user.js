@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		http://montdm.free.fr/ScrptMonZoo/
-// @version			3.14.1
+// @version			3.14.2
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey : bibliothèques et images intégrées)
 // @match			https://monzoo.net/*
@@ -3207,7 +3207,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.14.1",
+                version: "3.14.2",
                 donnees: donnees,
             }),
         ],
@@ -5211,6 +5211,16 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.14.2": [
+                    {
+                        class: "",
+                        txt: "Le script est désormais compatible avec Tampermonkey sur les navigateurs récents",
+                    },
+                    {
+                        class: "",
+                        txt: "Ajout d'un lien vers le convertisseur des anciens fichiers .db en .json dans la fenêtre « Gérer mes parcs »",
+                    },
+                ],
                 "3.14.1": [
                     {
                         class: "",
@@ -7528,7 +7538,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.14.1",
+    versionScript = "3.14.2",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -9946,7 +9956,7 @@ if (
                 .appendTo("body")
                 .html(
                     htmlListeZoos +
-                    '<div style="padding:6px;text-align:center"><a id="importer_donnees" class="action" style="cursor:pointer;color:#12249a">Importer mes données (fichier JSON)</a> &nbsp;|&nbsp; <a id="exporter_donnees" class="action" style="cursor:pointer;color:#12249a">Exporter</a></div>',
+                    '<div style="padding:6px;text-align:center"><a id="importer_donnees" class="action" style="cursor:pointer;color:#12249a">Importer mes données (fichier JSON)</a> &nbsp;|&nbsp; <a id="exporter_donnees" class="action" style="cursor:pointer;color:#12249a">Exporter</a><br><a href="https://mikey-ufc.github.io/boite-a-malices-monzoo/" target="_blank" rel="noopener" style="color:#12249a;font-size:0.9em">Ancien fichier .db ? Convertissez-le ici</a></div>',
                 )
                 .hide()
                 .dialog({
