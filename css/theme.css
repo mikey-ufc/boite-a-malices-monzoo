@@ -1,0 +1,218 @@
+/* Thème de la Boite à malices : surcouche du thème jQuery UI humanity.
+ *
+ * Injecté juste après le CSS de jQuery UI, il en reprend les sélecteurs pour
+ * les surcharger. Toutes les couleurs se règlent dans les variables ci-dessous ;
+ * les valeurs par défaut reprennent la palette humanity.
+ *
+ * Les textures d'origine (images ui-bg_*) sont retirées : elles contiennent la
+ * couleur et masquent background-color. Un dégradé CSS (--bam-reflet) les
+ * remplace ; le mettre à transparent pour un rendu entièrement plat.
+ *
+ * Les icônes (ui-icons_*.png) restent celles de humanity : ce sont des sprites
+ * déjà colorés, qu'on ne peut pas recolorer par variable.
+ */
+
+:root {
+    /* Général */
+    --bam-police: Helvetica, Arial, sans-serif;
+    --bam-taille-police: 1.1em;
+    --bam-arrondi: 6px;
+    --bam-reflet: rgba(255, 255, 255, 0.25);
+
+    /* Contenu des fenêtres */
+    --bam-contenu-fond: #f4f0ec;
+    --bam-contenu-bordure: #e0cfc2;
+    --bam-contenu-texte: #1e1b1d;
+    --bam-widget-bordure: #cdc3b7;
+
+    /* Barres de titre */
+    --bam-entete-fond: #cb842e;
+    --bam-entete-bordure: #d49768;
+    --bam-entete-texte: #ffffff;
+
+    /* Boutons et éléments cliquables : repos, survol / focus, actif */
+    --bam-defaut-fond: #ede4d4;
+    --bam-defaut-bordure: #cdc3b7;
+    --bam-defaut-texte: #3f3731;
+    --bam-survol-fond: #f5f0e5;
+    --bam-survol-bordure: #f5ad66;
+    --bam-survol-texte: #a46313;
+    --bam-actif-fond: #f4f0ec;
+    --bam-actif-bordure: #e0cfc2;
+    --bam-actif-texte: #b85700;
+
+    /* Mise en avant et erreurs */
+    --bam-surligne-fond: #f5f5b5;
+    --bam-surligne-bordure: #d9bb73;
+    --bam-surligne-texte: #060200;
+    --bam-erreur-fond: #fee4bd;
+    --bam-erreur-bordure: #f8893f;
+    --bam-erreur-texte: #592003;
+
+    /* Voile derrière les fenêtres modales */
+    --bam-voile: #aaaaaa;
+    --bam-voile-opacite: 0.3;
+}
+
+/* Général */
+.ui-widget,
+.ui-widget input,
+.ui-widget select,
+.ui-widget textarea,
+.ui-widget button {
+    font-family: var(--bam-police);
+}
+.ui-widget {
+    font-size: var(--bam-taille-police);
+}
+.ui-widget.ui-widget-content {
+    border-color: var(--bam-widget-bordure);
+}
+
+/* Contenu */
+.ui-widget-content {
+    border-color: var(--bam-contenu-bordure);
+    background: var(--bam-contenu-fond);
+    color: var(--bam-contenu-texte);
+}
+.ui-widget-content a {
+    color: var(--bam-contenu-texte);
+}
+
+/* Barres de titre */
+.ui-widget-header {
+    border-color: var(--bam-entete-bordure);
+    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-entete-fond);
+    color: var(--bam-entete-texte);
+}
+.ui-widget-header a {
+    color: var(--bam-entete-texte);
+}
+
+/* Etat par défaut */
+.ui-state-default,
+.ui-widget-content .ui-state-default,
+.ui-widget-header .ui-state-default,
+.ui-button,
+html .ui-button.ui-state-disabled:hover,
+html .ui-button.ui-state-disabled:active {
+    border-color: var(--bam-defaut-bordure);
+    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-defaut-fond);
+    color: var(--bam-defaut-texte);
+}
+.ui-state-default a,
+.ui-state-default a:link,
+.ui-state-default a:visited,
+a.ui-button,
+a:link.ui-button,
+a:visited.ui-button,
+.ui-button {
+    color: var(--bam-defaut-texte);
+}
+
+/* Survol et focus */
+.ui-state-hover,
+.ui-widget-content .ui-state-hover,
+.ui-widget-header .ui-state-hover,
+.ui-state-focus,
+.ui-widget-content .ui-state-focus,
+.ui-widget-header .ui-state-focus,
+.ui-button:hover,
+.ui-button:focus {
+    border-color: var(--bam-survol-bordure);
+    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-survol-fond);
+    color: var(--bam-survol-texte);
+}
+.ui-state-hover a,
+.ui-state-hover a:hover,
+.ui-state-hover a:link,
+.ui-state-hover a:visited,
+.ui-state-focus a,
+.ui-state-focus a:hover,
+.ui-state-focus a:link,
+.ui-state-focus a:visited,
+a.ui-button:hover,
+a.ui-button:focus {
+    color: var(--bam-survol-texte);
+}
+
+/* Actif */
+.ui-state-active,
+.ui-widget-content .ui-state-active,
+.ui-widget-header .ui-state-active,
+a.ui-button:active,
+.ui-button:active,
+.ui-button.ui-state-active:hover {
+    border-color: var(--bam-actif-bordure);
+    background: var(--bam-actif-fond);
+    color: var(--bam-actif-texte);
+}
+.ui-state-active a,
+.ui-state-active a:link,
+.ui-state-active a:visited {
+    color: var(--bam-actif-texte);
+}
+
+/* Mise en avant */
+.ui-state-highlight,
+.ui-widget-content .ui-state-highlight,
+.ui-widget-header .ui-state-highlight,
+.ui-state-checked {
+    border-color: var(--bam-surligne-bordure);
+    background: var(--bam-surligne-fond);
+    color: var(--bam-surligne-texte);
+}
+.ui-state-highlight a,
+.ui-widget-content .ui-state-highlight a,
+.ui-widget-header .ui-state-highlight a {
+    color: var(--bam-surligne-texte);
+}
+
+/* Erreurs */
+.ui-state-error,
+.ui-widget-content .ui-state-error,
+.ui-widget-header .ui-state-error {
+    border-color: var(--bam-erreur-bordure);
+    background: var(--bam-erreur-fond);
+    color: var(--bam-erreur-texte);
+}
+.ui-state-error a,
+.ui-widget-content .ui-state-error a,
+.ui-widget-header .ui-state-error a,
+.ui-state-error-text,
+.ui-widget-content .ui-state-error-text,
+.ui-widget-header .ui-state-error-text {
+    color: var(--bam-erreur-texte);
+}
+
+/* Arrondis */
+.ui-corner-all,
+.ui-corner-top,
+.ui-corner-left,
+.ui-corner-tl {
+    border-top-left-radius: var(--bam-arrondi);
+}
+.ui-corner-all,
+.ui-corner-top,
+.ui-corner-right,
+.ui-corner-tr {
+    border-top-right-radius: var(--bam-arrondi);
+}
+.ui-corner-all,
+.ui-corner-bottom,
+.ui-corner-left,
+.ui-corner-bl {
+    border-bottom-left-radius: var(--bam-arrondi);
+}
+.ui-corner-all,
+.ui-corner-bottom,
+.ui-corner-right,
+.ui-corner-br {
+    border-bottom-right-radius: var(--bam-arrondi);
+}
+
+/* Voile des fenêtres modales */
+.ui-widget-overlay {
+    background: var(--bam-voile);
+    opacity: var(--bam-voile-opacite);
+}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.15.0
+// @version			3.16.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -26,6 +26,7 @@
 // @resource		ui-icons_f35f07_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_f35f07_256x240.png#sha256=2266a33068a507d3e112378df610513c91645d4bcab319185c7b3855e9bbdd9f
 // @resource		ui-icons_ff7519_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_ff7519_256x240.png#sha256=29d7c387b5d125891104fe9770f29824eb8511c246630268db763b17e6c123d7
 // @resource		ui-icons_ffffff_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_ffffff_256x240.png#sha256=102af983463227337426f5339a7be9b690dab9407e2feb6d975b3a0e3ae5ac7b
+// @resource		themePerso                                https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/css/theme.css
 // @resource		aquarium.gif                              https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/aquarium.gif
 // @resource		bassin.gif                                https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/bassin.gif
 // @resource		foret.gif                                 https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/foret.gif
@@ -65,6 +66,8 @@
  * - jQuery 3.7.1, jQuery UI 1.14.2 (thème humanity) et flot 0.8.3 sont chargés via @require / @resource
  *   (versions figées et vérifiées par hash), les images du jeu proviennent du dossier images/ du dépôt.
  *   Tampermonkey les télécharge à l'installation et à chaque mise à jour, puis les garde en cache.
+ * - Le thème humanity est surchargé par css/theme.css (ressource themePerso), injecté juste après :
+ *   les couleurs se règlent dans ses variables --bam-*.
  */
 function importerDonnees() {
     var inp = document.createElement("input");
@@ -116,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.15.0",
+                version: "3.16.0",
                 donnees: donnees,
             }),
         ],
@@ -610,9 +613,13 @@ function initialiserStylesEtDonnees() {
     var cle,
         elementStyle = creerElement("style", {
             innerHTML: cssThemeUi,
+        }),
+        elementStylePerso = creerElement("style", {
+            innerHTML: GM_getResourceText("themePerso"),
         });
     if (
         (parBalise("head")[0].appendChild(elementStyle),
+            parBalise("head")[0].appendChild(elementStylePerso),
             GM_addStyle(
                 '.lien_naissances {cursor:pointer;float:left;margin-right:10px;font-size:10px;font-weight:bold}.lien_naissances a {color:navy}.lien_naissances a:hover {color:#3399CC}.ui-tooltip{padding:5px 10px;margin-right:20px;border-radius:20px;font:bold 12px "Times", Sans-Serif;text-transform:uppercase;box-shadow:0 0 7px black}.info_bulle{border:2px solid #000;border-radius:6px;position:absolute;z-index:83;background-color:#F7E3C0;padding:0px;font-family:garamond arial sans serif;font-size:12px}',
             ),
@@ -2102,6 +2109,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.0": [
+                    {
+                        class: "",
+                        txt: "Nouveau thème pour les fenêtres et les boutons du script, sans les textures d'origine",
+                    },
+                ],
                 "3.15.0": [
                     {
                         class: "",
@@ -4453,7 +4466,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.15.0",
+    versionScript = "3.16.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
