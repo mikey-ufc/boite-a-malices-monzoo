@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.0
+// @version			3.16.1
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.0",
+                version: "3.16.1",
                 donnees: donnees,
             }),
         ],
@@ -2111,6 +2111,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.1": [
+                    {
+                        class: "",
+                        txt: "Ajout de 16 espèces : amargasaure, cerf huppé, chien viverin, edmontosaure, gibbon, huppe fasciée, macareux moine, mammouth laineux, mante orchidée, ombonie épineuse, poisson perroquet, renard mélanique, requin baleine, tamarin, tenrec zébré et vipère velue",
+                    },
+                ],
                 "3.16.0": [
                     {
                         class: "",
@@ -4468,7 +4474,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.0",
+    versionScript = "3.16.1",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -5093,6 +5099,22 @@ for (
     especes.pteranodon = new Espece("ptéranodon", "", 5e4, 2, 10),
     especes.sarcosaure = new Espece("sarcosaure", "", 5e4, 3, 10),
     especes.stegosaure = new Espece("stégosaure", "", 5e4, 4, 10),
+    especes.amargasaure = new Espece("amargasaure", "", 50000, 0, 10),
+    especes.edmontosaure = new Espece("edmontosaure", "", 500000, 0, 10),
+    especes["cerf huppe"] = new Espece("cerf huppé", "cerfs huppés", 185000, 0, 4),
+    especes.gibbon = new Espece("gibbon", "", 245000, 0, 4),
+    especes.tamarin = new Espece("tamarin", "", 370000, 0, 4),
+    especes["chien viverin"] = new Espece("chien viverin", "chiens viverins", 282500, 0, 3),
+    especes["macareux moine"] = new Espece("macareux moine", "macareux moines", 475000, 0, 3),
+    especes["mammouth laineux"] = new Espece("mammouth laineux", "mammouths laineux", 650000, 0, 3),
+    especes["renard melanique"] = new Espece("renard mélanique", "renards mélaniques", 100000, 0, 3),
+    especes["huppe fasciee"] = new Espece("huppe fasciée", "huppes fasciées", 55000, 0, 5),
+    especes["mante orchidee"] = new Espece("mante orchidée", "mantes orchidées", 68000, 0, 9),
+    especes["ombonie epineuse"] = new Espece("ombonie épineuse", "ombonies épineuses", 145000, 0, 9),
+    especes["poisson perroquet"] = new Espece("poisson perroquet", "poissons perroquets", 200000, 0, 6),
+    especes["requin baleine"] = new Espece("requin baleine", "requins baleines", 325000, 0, 2),
+    especes["tenrec zebre"] = new Espece("tenrec zébré", "tenrecs zébrés", 240000, 0, 8),
+    especes["vipere velue"] = new Espece("vipère velue", "vipères velues", 275000, 0, 7),
     indexBoucle = 0;
     indexBoucle < especesAjoutees.length;
     indexBoucle++
