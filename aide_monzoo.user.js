@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.14.4
+// @version			3.14.5
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -116,7 +116,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.14.4",
+                version: "3.14.5",
                 donnees: donnees,
             }),
         ],
@@ -1145,7 +1145,6 @@ function libelleEnclos(refEnclos) {
 }
 function completerMenu() {
     var lienFaune = $("<a>")
-            .addClass("un")
             .attr("href", "bureau5.php?faune")
             .append(
                 $("<div>").html("Faune de monzoo").addClass("link").css({
@@ -1153,7 +1152,6 @@ function completerMenu() {
                 }),
             ),
         lienRapport = $("<a>")
-            .addClass("un")
             .css({
                 cursor: "pointer",
             })
@@ -1164,7 +1162,6 @@ function completerMenu() {
                 }),
             ),
         lienMusee = $("<a>")
-            .addClass("un")
             .attr("href", "enclosgestion.php?t=5&v=0")
             .append(
                 $("<div>").html("Musée").addClass("link").css({
@@ -1172,7 +1169,6 @@ function completerMenu() {
                 }),
             ),
         lienBotanica = $("<a>")
-            .addClass("un")
             .attr("href", "botanica.php")
             .append(
                 $("<div>").html("Botanica").addClass("link").css({
@@ -1180,7 +1176,6 @@ function completerMenu() {
                 }),
             ),
         lienLabo = $("<a>")
-            .addClass("un")
             .attr("href", "labo.php")
             .append(
                 $("<div>").html("Labo").addClass("link").css({
@@ -1192,11 +1187,15 @@ function completerMenu() {
     divsMenu.each(function () {
         var divMenu = divsMenu.filter(this),
             parentMenu = divMenu.parent(),
+            classeLien = parentMenu.attr("class") || null,
             texteMenu = divMenu.html();
         (divMenu.attr("style", "font-size:15px"),
-        /intendance/i.test(texteMenu) && ($(parentMenu).before(lienFaune), $(parentMenu).before(lienRapport)),
+        /intendance/i.test(texteMenu) &&
+        ($(parentMenu).before(lienFaune.attr("class", classeLien)), $(parentMenu).before(lienRapport.attr("class", classeLien))),
         /missions/i.test(texteMenu) &&
-        ($(parentMenu).before(lienMusee), $(parentMenu).before(lienBotanica), $(parentMenu).before(lienLabo)),
+        ($(parentMenu).before(lienMusee.attr("class", classeLien)),
+            $(parentMenu).before(lienBotanica.attr("class", classeLien)),
+            $(parentMenu).before(lienLabo.attr("class", classeLien))),
         /classement/i.test(texteMenu) && divMenu.html("Les classements"),
         /\+ de Mise/i.test(texteMenu) && divMenu.html("+ de mises à jour"));
     });
@@ -2103,6 +2102,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.14.5": [
+                    {
+                        class: "",
+                        txt: "Les liens ajoutés au menu reprennent l'apparence des liens du jeu",
+                    },
+                ],
                 "3.14.4": [
                     {
                         class: "",
@@ -4442,7 +4447,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.14.4",
+    versionScript = "3.14.5",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
