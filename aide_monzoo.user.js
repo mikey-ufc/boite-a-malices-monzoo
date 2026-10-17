@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.14.3
+// @version			3.14.4
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -116,7 +116,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.14.3",
+                version: "3.14.4",
                 donnees: donnees,
             }),
         ],
@@ -1194,11 +1194,11 @@ function completerMenu() {
             parentMenu = divMenu.parent(),
             texteMenu = divMenu.html();
         (divMenu.attr("style", "font-size:15px"),
-        /intendance/.test(texteMenu) && ($(parentMenu).before(lienFaune), $(parentMenu).before(lienRapport)),
-        /missions/.test(texteMenu) &&
+        /intendance/i.test(texteMenu) && ($(parentMenu).before(lienFaune), $(parentMenu).before(lienRapport)),
+        /missions/i.test(texteMenu) &&
         ($(parentMenu).before(lienMusee), $(parentMenu).before(lienBotanica), $(parentMenu).before(lienLabo)),
-        /classement/.test(texteMenu) && divMenu.html("Les classements"),
-        /\+ de Mise/.test(texteMenu) && divMenu.html("+ de mises à jour"));
+        /classement/i.test(texteMenu) && divMenu.html("Les classements"),
+        /\+ de Mise/i.test(texteMenu) && divMenu.html("+ de mises à jour"));
     });
     var libelleCourant,
         positionMenu,
@@ -2103,6 +2103,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.14.4": [
+                    {
+                        class: "",
+                        txt: "Les liens ajoutés au menu (Faune de monzoo, Rapport, Musée, Botanica, Labo) s'affichent de nouveau suite au changement des libellés du menu du jeu",
+                    },
+                ],
                 "3.14.3": [
                     {
                         class: "",
@@ -4436,7 +4442,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.14.3",
+    versionScript = "3.14.4",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
