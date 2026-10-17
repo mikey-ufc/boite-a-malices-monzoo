@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.14.5
+// @version			3.15.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -9,23 +9,23 @@
 // @supportURL		https://github.com/mikey-ufc/boite-a-malices-monzoo/issues
 // @updateURL		https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/aide_monzoo.user.js
 // @downloadURL		https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/aide_monzoo.user.js
-// @require			https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js#sha256=87083882cc6015984eb0411a99d3981817f5dc5c90ba24f0940420c5548d82de
-// @require			https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.min.js#sha256=28ce75d953678c4942df47a11707a15e3c756021cf89090e3e6aa7ad6b6971c3
+// @require			https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js#sha256=fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a
+// @require			https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/jquery-ui.min.js#sha256=99b95259f6d8cdaabf7fee1a93232113a5c42c2a2ee236e480fbfe2503c44763
 // @require			https://cdn.jsdelivr.net/npm/flot@0.8.3/jquery.flot.js#sha256=b7b931f273c38b1277b9c6c1f4e05c4ec09885a487bddaf3279e2d7e49a38e12
-// @resource		jQueryUICSS                               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/jquery-ui.min.css#sha256=7a365b5f1c0d5faceb33c33158e99d3ffcc0f0030115786885e69886abb2e67e
-// @resource		ui-bg_glass_25_cb842e_1x400.png           https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_glass_25_cb842e_1x400.png#sha256=5f909a2c1ef343dd2f9f0aae1a7d44eacfd87d7e8c6d4a2471e0e6ad18d934e4
-// @resource		ui-bg_glass_70_ede4d4_1x400.png           https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_glass_70_ede4d4_1x400.png#sha256=4f5fc40f20c22a6649c5e91062e2885b4e425ca5f82ff36dec221b1ee62ea907
-// @resource		ui-bg_glass_100_f5f0e5_1x400.png          https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_glass_100_f5f0e5_1x400.png#sha256=7a85f4e7d308aab21cb994b94a90494febcdb4db2cf9fbdb5848f720111a7882
-// @resource		ui-bg_highlight-hard_65_fee4bd_1x100.png  https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_highlight-hard_65_fee4bd_1x100.png#sha256=1f0b8fd4f64e5eeb28f94a4c971c8f9af274884cb35a401f4f62d8d6f148ade2
-// @resource		ui-bg_highlight-hard_75_f5f5b5_1x100.png  https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_highlight-hard_75_f5f5b5_1x100.png#sha256=519eec0349065c94bd9e6f085033373c9f275f9665fd436d04a32a3e062a3fce
-// @resource		ui-bg_highlight-hard_100_f4f0ec_1x100.png https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_highlight-hard_100_f4f0ec_1x100.png#sha256=edeeb76a72fe715616cc3fcfab776fffcc0ae34401462a2997dc6840875c00dc
-// @resource		ui-bg_inset-soft_100_f4f0ec_1x100.png     https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-bg_inset-soft_100_f4f0ec_1x100.png#sha256=523d2b0dda888d1c2452cfbfdf8ceccd53e906982658a2e0208fac2092c8ba26
-// @resource		ui-icons_c47a23_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_c47a23_256x240.png#sha256=af02476cb9c30c2dc4ec422ce769e85362bc1cb70c1e604ecf7a3eda62354ad8
-// @resource		ui-icons_cb672b_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_cb672b_256x240.png#sha256=24eb00f250cd8adaaa657736fa598e2661c7d288b9db1b2ae709484c499f32b7
-// @resource		ui-icons_f08000_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_f08000_256x240.png#sha256=9b9342f9e68181335a555dbc67223672f6c4e38904b817010f69355a271d14d1
-// @resource		ui-icons_f35f07_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_f35f07_256x240.png#sha256=aedab66b48ebf1846aefb1d1346efbd84e5d0bc56d1d29da74180cddbcb33fe0
-// @resource		ui-icons_ff7519_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_ff7519_256x240.png#sha256=0c73327aeb1603b3e89cd14754e5db3355d63d47b228cef321c129f361ec492f
-// @resource		ui-icons_ffffff_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui-themes@1.12.0/themes/humanity/images/ui-icons_ffffff_256x240.png#sha256=56600cec6c07804a92f28fd3d377284829ddb5f416d5b906a4cbdfc534723d5a
+// @resource		jQueryUICSS                               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/jquery-ui.min.css#sha256=4f59f420d8f5f69920bd30a484348ee272ca1f934be09c1058450ee71187b410
+// @resource		ui-bg_glass_25_cb842e_1x400.png           https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_glass_25_cb842e_1x400.png#sha256=e6b694b6cde814e03080778c7d71bfd7d30659f968b8a580df6e26e11f67fd13
+// @resource		ui-bg_glass_70_ede4d4_1x400.png           https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_glass_70_ede4d4_1x400.png#sha256=89366aadab6e9ccc30fa795da56d0b7cf49aae8d7c935b1fbeb6f3f967c3c194
+// @resource		ui-bg_glass_100_f5f0e5_1x400.png          https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_glass_100_f5f0e5_1x400.png#sha256=27f62d2f4bccff559bbdebef3b7a19c1d3e0a5740bf621847806d1cbfaaf0336
+// @resource		ui-bg_highlight-hard_65_fee4bd_1x100.png  https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_highlight-hard_65_fee4bd_1x100.png#sha256=3691cf80de2682fd79fa11e51ca08982b1c8be47e03c07e7e03026ccf4fa01b5
+// @resource		ui-bg_highlight-hard_75_f5f5b5_1x100.png  https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_highlight-hard_75_f5f5b5_1x100.png#sha256=b0d99543743a779659f61037d37acd11daf55af6318f44a78d78aafa5d55115d
+// @resource		ui-bg_highlight-hard_100_f4f0ec_1x100.png https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_highlight-hard_100_f4f0ec_1x100.png#sha256=40741c450c0d042f0586fe803628468b399ebd506aa34a73369e85c8e4e20de3
+// @resource		ui-bg_inset-soft_100_f4f0ec_1x100.png     https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-bg_inset-soft_100_f4f0ec_1x100.png#sha256=3719f3f00bbb11d08b63cb80df8b5e2e1c3a1595d2526efc5931cff062686dfd
+// @resource		ui-icons_c47a23_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_c47a23_256x240.png#sha256=aeff005b90f40ee013aeddb06e783df06952fab45ad3a3d83501d9e3575fd0ad
+// @resource		ui-icons_cb672b_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_cb672b_256x240.png#sha256=e97a016af3fd75ec1a51ab5e192acc4b83401c62d1a2c5e648037203b6c9a3e8
+// @resource		ui-icons_f08000_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_f08000_256x240.png#sha256=6f9600d2b15cc76a9382e88aca627085375cff954b22e317f0c0f3684f89567f
+// @resource		ui-icons_f35f07_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_f35f07_256x240.png#sha256=2266a33068a507d3e112378df610513c91645d4bcab319185c7b3855e9bbdd9f
+// @resource		ui-icons_ff7519_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_ff7519_256x240.png#sha256=29d7c387b5d125891104fe9770f29824eb8511c246630268db763b17e6c123d7
+// @resource		ui-icons_ffffff_256x240.png               https://cdn.jsdelivr.net/npm/jquery-ui@1.14.2/dist/themes/humanity/images/ui-icons_ffffff_256x240.png#sha256=102af983463227337426f5339a7be9b690dab9407e2feb6d975b3a0e3ae5ac7b
 // @resource		aquarium.gif                              https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/aquarium.gif
 // @resource		bassin.gif                                https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/bassin.gif
 // @resource		foret.gif                                 https://raw.githubusercontent.com/mikey-ufc/boite-a-malices-monzoo/main/images/foret.gif
@@ -62,7 +62,7 @@
 /* eslint-disable curly */
 
 /* ===== Adaptation Tampermonkey (Brave / Chromium) =====
- * - jQuery 3.2.1, jQuery UI 1.12.1 (thème humanity) et flot 0.8.3 sont chargés via @require / @resource
+ * - jQuery 3.7.1, jQuery UI 1.14.2 (thème humanity) et flot 0.8.3 sont chargés via @require / @resource
  *   (versions figées et vérifiées par hash), les images du jeu proviennent du dossier images/ du dépôt.
  *   Tampermonkey les télécharge à l'installation et à chaque mise à jour, puis les garde en cache.
  */
@@ -116,7 +116,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.14.5",
+                version: "3.15.0",
                 donnees: donnees,
             }),
         ],
@@ -2102,6 +2102,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.15.0": [
+                    {
+                        class: "",
+                        txt: "Mise à jour des bibliothèques jQuery (3.7.1) et jQuery UI (1.14.2), qui corrige plusieurs failles de sécurité",
+                    },
+                ],
                 "3.14.5": [
                     {
                         class: "",
@@ -4447,7 +4453,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.14.5",
+    versionScript = "3.15.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
