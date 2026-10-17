@@ -1,57 +1,62 @@
 /* Thème de la Boite à malices : surcouche du thème jQuery UI humanity.
  *
  * Injecté juste après le CSS de jQuery UI, il en reprend les sélecteurs pour
- * les surcharger. Toutes les couleurs se règlent dans les variables ci-dessous ;
- * les valeurs par défaut reprennent la palette humanity.
+ * les surcharger. Les couleurs reprennent la charte de monzoo.net (style2.css
+ * et images des titres) dans un rendu plus moderne : aplats, coins arrondis,
+ * ombres douces. Tout se règle dans les variables ci-dessous.
  *
  * Les textures d'origine (images ui-bg_*) sont retirées : elles contiennent la
- * couleur et masquent background-color. Un dégradé CSS (--bam-reflet) les
- * remplace ; le mettre à transparent pour un rendu entièrement plat.
+ * couleur et masquent background-color.
  *
  * Les icônes (ui-icons_*.png) restent celles de humanity : ce sont des sprites
- * déjà colorés, qu'on ne peut pas recolorer par variable.
+ * déjà colorés (tons orangés), qu'on ne peut pas recolorer par variable.
  */
 
 :root {
     /* Général */
-    --bam-police: Helvetica, Arial, sans-serif;
+    --bam-police: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
     --bam-taille-police: 1.1em;
-    --bam-arrondi: 6px;
-    --bam-reflet: rgba(255, 255, 255, 0.25);
+    --bam-arrondi: 8px;
+    --bam-arrondi-fenetre: 12px;
+    --bam-ombre: 0 12px 32px rgba(99, 68, 37, 0.35), 0 2px 6px rgba(99, 68, 37, 0.2);
+    --bam-focus: 0 0 0 3px rgba(184, 98, 66, 0.4);
+    --bam-transition: 0.15s ease;
 
-    /* Contenu des fenêtres */
-    --bam-contenu-fond: #f4f0ec;
-    --bam-contenu-bordure: #e0cfc2;
-    --bam-contenu-texte: #1e1b1d;
-    --bam-widget-bordure: #cdc3b7;
+    /* Contenu des fenêtres : parchemin et texte brun du site */
+    --bam-contenu-fond: #fff8ed;
+    --bam-contenu-bordure: #e9ca94;
+    --bam-contenu-texte: #634425;
+    --bam-contenu-lien: #b86242;
+    --bam-widget-bordure: #c5a97c;
 
-    /* Barres de titre */
-    --bam-entete-fond: #cb842e;
-    --bam-entete-bordure: #d49768;
-    --bam-entete-texte: #ffffff;
+    /* Barres de titre : rouille des liens, liseré vert des titres en bois */
+    --bam-entete-fond: #b86242;
+    --bam-entete-fond-haut: #c4704a;
+    --bam-entete-liseret: #788208;
+    --bam-entete-texte: #fff8ed;
 
     /* Boutons et éléments cliquables : repos, survol / focus, actif */
-    --bam-defaut-fond: #ede4d4;
-    --bam-defaut-bordure: #cdc3b7;
-    --bam-defaut-texte: #3f3731;
-    --bam-survol-fond: #f5f0e5;
-    --bam-survol-bordure: #f5ad66;
-    --bam-survol-texte: #a46313;
-    --bam-actif-fond: #f4f0ec;
-    --bam-actif-bordure: #e0cfc2;
-    --bam-actif-texte: #b85700;
+    --bam-defaut-fond: #f7e3c0;
+    --bam-defaut-bordure: #c5a97c;
+    --bam-defaut-texte: #634425;
+    --bam-survol-fond: #fff8ed;
+    --bam-survol-bordure: #b86242;
+    --bam-survol-texte: #b86242;
+    --bam-actif-fond: #b86242;
+    --bam-actif-bordure: #9a4f33;
+    --bam-actif-texte: #fff8ed;
 
-    /* Mise en avant et erreurs */
-    --bam-surligne-fond: #f5f5b5;
-    --bam-surligne-bordure: #d9bb73;
-    --bam-surligne-texte: #060200;
-    --bam-erreur-fond: #fee4bd;
-    --bam-erreur-bordure: #f8893f;
-    --bam-erreur-texte: #592003;
+    /* Mise en avant (tons des titres secondaires) et erreurs (encadré rouge du site) */
+    --bam-surligne-fond: #f9e8b2;
+    --bam-surligne-bordure: #b7b737;
+    --bam-surligne-texte: #634425;
+    --bam-erreur-fond: #f8d8cc;
+    --bam-erreur-bordure: #842d12;
+    --bam-erreur-texte: #842d12;
 
     /* Voile derrière les fenêtres modales */
-    --bam-voile: #aaaaaa;
-    --bam-voile-opacite: 0.3;
+    --bam-voile: #634425;
+    --bam-voile-opacite: 0.35;
 }
 
 /* Général */
@@ -76,13 +81,13 @@
     color: var(--bam-contenu-texte);
 }
 .ui-widget-content a {
-    color: var(--bam-contenu-texte);
+    color: var(--bam-contenu-lien);
 }
 
 /* Barres de titre */
 .ui-widget-header {
-    border-color: var(--bam-entete-bordure);
-    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-entete-fond);
+    border-color: var(--bam-entete-fond);
+    background: linear-gradient(var(--bam-entete-fond-haut), var(--bam-entete-fond));
     color: var(--bam-entete-texte);
 }
 .ui-widget-header a {
@@ -97,7 +102,7 @@
 html .ui-button.ui-state-disabled:hover,
 html .ui-button.ui-state-disabled:active {
     border-color: var(--bam-defaut-bordure);
-    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-defaut-fond);
+    background: var(--bam-defaut-fond);
     color: var(--bam-defaut-texte);
 }
 .ui-state-default a,
@@ -120,7 +125,7 @@ a:visited.ui-button,
 .ui-button:hover,
 .ui-button:focus {
     border-color: var(--bam-survol-bordure);
-    background: linear-gradient(var(--bam-reflet), transparent) var(--bam-survol-fond);
+    background: var(--bam-survol-fond);
     color: var(--bam-survol-texte);
 }
 .ui-state-hover a,
@@ -134,6 +139,9 @@ a:visited.ui-button,
 a.ui-button:hover,
 a.ui-button:focus {
     color: var(--bam-survol-texte);
+}
+.ui-visual-focus {
+    box-shadow: var(--bam-focus);
 }
 
 /* Actif */
@@ -151,6 +159,10 @@ a.ui-button:active,
 .ui-state-active a:link,
 .ui-state-active a:visited {
     color: var(--bam-actif-texte);
+}
+.ui-state-active .ui-icon,
+.ui-button:active .ui-icon {
+    background-image: url("images/ui-icons_ffffff_256x240.png");
 }
 
 /* Mise en avant */
@@ -209,6 +221,57 @@ a.ui-button:active,
 .ui-corner-right,
 .ui-corner-br {
     border-bottom-right-radius: var(--bam-arrondi);
+}
+
+/* Boutons */
+.ui-button {
+    padding: 0.45em 1.1em;
+    transition:
+        background-color var(--bam-transition),
+        border-color var(--bam-transition),
+        color var(--bam-transition);
+}
+
+/* Fenêtres */
+.ui-dialog.ui-widget-content {
+    padding: 0;
+    border: none;
+    border-radius: var(--bam-arrondi-fenetre);
+    box-shadow: var(--bam-ombre);
+    overflow: hidden;
+}
+.ui-dialog .ui-dialog-titlebar {
+    padding: 0.6em 1em;
+    border: none;
+    border-bottom: 3px solid var(--bam-entete-liseret);
+    border-radius: 0;
+}
+.ui-dialog .ui-dialog-titlebar-close {
+    right: 0.6em;
+    border: none;
+    background: transparent;
+}
+.ui-dialog .ui-dialog-titlebar-close:hover,
+.ui-dialog .ui-dialog-titlebar-close:focus {
+    background: rgba(255, 255, 255, 0.2);
+}
+.ui-dialog .ui-dialog-titlebar-close .ui-icon {
+    background-image: url("images/ui-icons_ffffff_256x240.png");
+}
+.ui-dialog .ui-dialog-content {
+    padding: 0.8em 1em;
+}
+.ui-dialog .ui-dialog-buttonpane {
+    border-top-color: var(--bam-contenu-bordure);
+}
+
+/* Accordéons */
+.ui-accordion .ui-accordion-header {
+    padding: 0.6em 1em;
+    transition:
+        background-color var(--bam-transition),
+        border-color var(--bam-transition),
+        color var(--bam-transition);
 }
 
 /* Voile des fenêtres modales */

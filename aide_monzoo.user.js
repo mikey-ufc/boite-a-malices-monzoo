@@ -606,16 +606,18 @@ function initialiserStylesEtDonnees() {
             "images/ui-icons_ff7519_256x240.png": GM_getResourceURL("ui-icons_ff7519_256x240.png"),
             "images/ui-icons_ffffff_256x240.png": GM_getResourceURL("ui-icons_ffffff_256x240.png"),
         },
-        cssThemeUi = GM_getResourceText("jQueryUICSS");
+        cssThemeUi = GM_getResourceText("jQueryUICSS"),
+        cssThemePerso = GM_getResourceText("themePerso");
     $.each(remplacementsImages, function (cheminImage, uriImage) {
         cssThemeUi = cssThemeUi.replace(new RegExp(cheminImage, "g"), uriImage);
+        cssThemePerso = cssThemePerso.replace(new RegExp(cheminImage, "g"), uriImage);
     });
     var cle,
         elementStyle = creerElement("style", {
             innerHTML: cssThemeUi,
         }),
         elementStylePerso = creerElement("style", {
-            innerHTML: GM_getResourceText("themePerso"),
+            innerHTML: cssThemePerso,
         });
     if (
         (parBalise("head")[0].appendChild(elementStyle),
