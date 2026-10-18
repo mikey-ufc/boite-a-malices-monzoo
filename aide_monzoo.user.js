@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.1
+// @version			3.16.2
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.1",
+                version: "3.16.2",
                 donnees: donnees,
             }),
         ],
@@ -2111,6 +2111,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.2": [
+                    {
+                        class: "",
+                        txt: "Gabarits renseignés pour 13 des 16 espèces ajoutées en 3.16.1, ainsi que les espèces d'exploration (chien viverin, edmontosaure) et les conditions d'obtention (gibbon, ombonie épineuse, tenrec zébré). Les gabarits de l'amargasaure, de l'edmontosaure et de la huppe fasciée restent inconnus",
+                    },
+                ],
                 "3.16.1": [
                     {
                         class: "",
@@ -4474,7 +4480,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.1",
+    versionScript = "3.16.2",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -4774,14 +4780,7 @@ for (
     especes.colombe = new Espece("colombe", "", 15e3, 1, 5, 32),
     especes["crocodile albinos"] = new Espece("crocodile albinos", "crocodiles albinos", 39e3, 3, 3, 4),
     especes.lycaon = new Espece("lycaon", "", 45e4, 2, 1),
-    especes["boa constrictor albinos"] = new Espece(
-        "boa constrictor albinos",
-        "boas constrictor albinos",
-        35e3,
-        1,
-        7,
-        4,
-    ),
+    especes["boa constrictor albinos"] = new Espece("boa constrictor albinos", "boas constrictor albinos", 35e3, 1, 7, 4,),
     especes.lion = new Espece("lion", "", 1e5, 3, 1, 2),
     especes["grabote de paques"] = new Espece("grabote de Pâques", "grabotes de Pâques", 7e3, 1, 6, 64),
     especes.oryx = new Espece("oryx", "oryx", 75e3, 3, 1),
@@ -5100,21 +5099,21 @@ for (
     especes.sarcosaure = new Espece("sarcosaure", "", 5e4, 3, 10),
     especes.stegosaure = new Espece("stégosaure", "", 5e4, 4, 10),
     especes.amargasaure = new Espece("amargasaure", "", 50000, 0, 10),
-    especes.edmontosaure = new Espece("edmontosaure", "", 500000, 0, 10),
-    especes["cerf huppe"] = new Espece("cerf huppé", "cerfs huppés", 185000, 0, 4),
-    especes.gibbon = new Espece("gibbon", "", 245000, 0, 4),
-    especes.tamarin = new Espece("tamarin", "", 370000, 0, 4),
-    especes["chien viverin"] = new Espece("chien viverin", "chiens viverins", 282500, 0, 3),
-    especes["macareux moine"] = new Espece("macareux moine", "macareux moines", 475000, 0, 3),
-    especes["mammouth laineux"] = new Espece("mammouth laineux", "mammouths laineux", 650000, 0, 3),
-    especes["renard melanique"] = new Espece("renard mélanique", "renards mélaniques", 100000, 0, 3),
+    especes.edmontosaure = new Espece("edmontosaure", "", 500000, 0, 10, 8),
+    especes["cerf huppe"] = new Espece("cerf huppé", "cerfs huppés", 185000, 3, 4),
+    especes.gibbon = new Espece("gibbon", "", 245000, 2, 4, 0, "1 stock si 8 naissances de singes en 1 maj"),
+    especes.tamarin = new Espece("tamarin", "", 370000, 1, 4),
+    especes["chien viverin"] = new Espece("chien viverin", "chiens viverins", 282500, 2, 3, 8),
+    especes["macareux moine"] = new Espece("macareux moine", "macareux moines", 475000, 1, 3),
+    especes["mammouth laineux"] = new Espece("mammouth laineux", "mammouths laineux", 650000, 4, 3),
+    especes["renard melanique"] = new Espece("renard mélanique", "renards mélaniques", 100000, 2, 3),
     especes["huppe fasciee"] = new Espece("huppe fasciée", "huppes fasciées", 55000, 0, 5),
-    especes["mante orchidee"] = new Espece("mante orchidée", "mantes orchidées", 68000, 0, 9),
-    especes["ombonie epineuse"] = new Espece("ombonie épineuse", "ombonies épineuses", 145000, 0, 9),
-    especes["poisson perroquet"] = new Espece("poisson perroquet", "poissons perroquets", 200000, 0, 6),
-    especes["requin baleine"] = new Espece("requin baleine", "requins baleines", 325000, 0, 2),
-    especes["tenrec zebre"] = new Espece("tenrec zébré", "tenrecs zébrés", 240000, 0, 8),
-    especes["vipere velue"] = new Espece("vipère velue", "vipères velues", 275000, 0, 7),
+    especes["mante orchidee"] = new Espece("mante orchidée", "mantes orchidées", 68000, 1, 9),
+    especes["ombonie epineuse"] = new Espece("ombonie épineuse", "ombonies épineuses", 145000, 1, 9, 0, "1 stock si 4 naissances d'insectes"),
+    especes["poisson perroquet"] = new Espece("poisson perroquet", "poissons perroquets", 200000, 2, 6),
+    especes["requin baleine"] = new Espece("requin baleine", "requins baleines", 325000, 5, 2),
+    especes["tenrec zebre"] = new Espece("tenrec zébré", "tenrecs zébrés", 240000, 1, 8, 0, "2 stocks si 2 morts d'effraies des clochers et 2 morts de hiboux grand-duc dans la semaine"),
+    especes["vipere velue"] = new Espece("vipère velue", "vipères velues", 275000, 1, 7),
     indexBoucle = 0;
     indexBoucle < especesAjoutees.length;
     indexBoucle++
