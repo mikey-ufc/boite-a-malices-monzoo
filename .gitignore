@@ -3,3 +3,6 @@
 # Données privées
 *.db
 monzoo_donnees.json
+
+# Fichiers de travail non versionnés
+tmp/
