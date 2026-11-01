@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.2
+// @version			3.16.3
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.2",
+                version: "3.16.3",
                 donnees: donnees,
             }),
         ],
@@ -144,6 +144,70 @@ function exporterDonnees() {
 }
 $(document).on("click", "#importer_donnees", importerDonnees);
 $(document).on("click", "#exporter_donnees", exporterDonnees);
+
+// Déplacement et redimensionnement des popins au doigt : jQuery UI ne gère que la souris,
+// on traduit donc les événements tactiles en événements souris sur la barre de titre et les poignées.
+(function () {
+    var ZONES_TACTILES = ".ui-dialog-titlebar, .ui-resizable-handle",
+        EXCLUSIONS = ".ui-dialog-titlebar-close, button, a, input, select, textarea",
+        toucheEnCours = null,
+        aBouge = !1;
+    GM_addStyle(".ui-dialog-titlebar, .ui-resizable-handle {touch-action:none}");
+    function simulerSouris(type, touche, cible) {
+        cible.dispatchEvent(
+            new MouseEvent(type, {
+                bubbles: !0,
+                cancelable: !0,
+                view: window,
+                clientX: touche.clientX,
+                clientY: touche.clientY,
+                screenX: touche.screenX,
+                screenY: touche.screenY,
+                button: 0,
+                buttons: "mouseup" == type ? 0 : 1,
+            }),
+        );
+    }
+    document.addEventListener(
+        "touchstart",
+        function (evenement) {
+            if (1 != evenement.touches.length) return;
+            var cible = evenement.target;
+            if (!cible.closest || !cible.closest(ZONES_TACTILES) || cible.closest(EXCLUSIONS)) return;
+            toucheEnCours = { id: evenement.changedTouches[0].identifier, cible: cible };
+            aBouge = !1;
+            simulerSouris("mousedown", evenement.changedTouches[0], cible);
+        },
+        { passive: !0 },
+    );
+    function toucheSuivie(evenement) {
+        if (!toucheEnCours) return null;
+        for (var i = 0; i < evenement.changedTouches.length; i++)
+            if (evenement.changedTouches[i].identifier == toucheEnCours.id) return evenement.changedTouches[i];
+        return null;
+    }
+    document.addEventListener(
+        "touchmove",
+        function (evenement) {
+            var touche = toucheSuivie(evenement);
+            if (!touche) return;
+            aBouge = !0;
+            evenement.preventDefault();
+            simulerSouris("mousemove", touche, toucheEnCours.cible);
+        },
+        { passive: !1 },
+    );
+    function finTouche(evenement) {
+        var touche = toucheSuivie(evenement);
+        if (!touche) return;
+        // Après un glissement, on bloque les événements souris que le navigateur émettrait en plus
+        aBouge && evenement.cancelable && evenement.preventDefault();
+        simulerSouris("mouseup", touche, toucheEnCours.cible);
+        toucheEnCours = null;
+    }
+    document.addEventListener("touchend", finTouche, { passive: !1 });
+    document.addEventListener("touchcancel", finTouche, { passive: !1 });
+})();
 !(function (e) {
     e.widget("custom.tooltipX", e.ui.tooltip, {
         options: {
@@ -2111,6 +2175,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.3": [
+                    {
+                        class: "",
+                        txt: "Sur mobile, les fenêtres du script peuvent maintenant être déplacées au doigt (en glissant la barre de titre) et redimensionnées avec leurs poignées",
+                    },
+                ],
                 "3.16.2": [
                     {
                         class: "",
@@ -4480,7 +4550,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.2",
+    versionScript = "3.16.3",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
