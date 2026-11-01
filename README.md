@@ -10,6 +10,15 @@ Boîte à malices pour monzoo, userscript Tampermonkey
 
 Les mises à jour sont ensuite proposées automatiquement par Tampermonkey.
 
+## Signaler un bug ou proposer une idée
+
+Deux possibilités :
+
+- **Sur le forum de monzoo**, sans compte GitHub : https://monzoo.net/forumv2/viewtopic.php?id=3834
+- **Sur GitHub**, en ouvrant une « issue » (compte GitHub gratuit nécessaire) : https://github.com/mikey-ufc/boite-a-malices-monzoo/issues
+
+Pour un bug, précisez si possible votre navigateur, la version du script (visible dans Tampermonkey) et la page du jeu concernée. Si le problème persiste en désactivant le script, il vient du jeu et non du script.
+
 ## Convertisseur .db → .json
 
 Vous avez un ancien fichier de sauvegarde `.db` ? Convertissez-le en `.json` ici : https://mikey-ufc.github.io/boite-a-malices-monzoo/
