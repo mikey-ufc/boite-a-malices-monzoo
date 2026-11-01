@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.5
+// @version			3.16.6
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.5",
+                version: "3.16.6",
                 donnees: donnees,
             }),
         ],
@@ -282,15 +282,24 @@ $(document).on("click", "#exporter_donnees", exporterDonnees);
 // (rapport, notes de version centrés pour 800 à 850 px), d'où l'ajustement différé.
 (function () {
     var MARGE = 5;
-    GM_addStyle(".ui-dialog {max-width:calc(100vw - " + 2 * MARGE + "px)}");
+    // Zone visible, relative à la fenêtre de mise en page. Sur mobile, une page plus large que l'écran
+    // (comme monzoo) est dézoomée : on voit alors plus large que clientWidth et 100vw
+    function zoneVisible() {
+        var largeurPage = document.documentElement.clientWidth,
+            visuel = window.visualViewport;
+        return visuel && visuel.width > largeurPage
+            ? { gauche: visuel.offsetLeft, haut: visuel.offsetTop, largeur: visuel.width }
+            : { gauche: 0, haut: 0, largeur: largeurPage };
+    }
     $(document).on("dialogopen", function (evenement) {
         setTimeout(function () {
             var fenetre = $(evenement.target).closest(".ui-dialog");
             if (!fenetre.is(":visible")) return;
-            var largeurEcran = document.documentElement.clientWidth,
-                cadre = fenetre[0].getBoundingClientRect(),
-                gauche = Math.max(MARGE, Math.min(cadre.left, largeurEcran - MARGE - cadre.width)),
-                haut = Math.max(0, cadre.top);
+            var zone = zoneVisible();
+            fenetre.css("max-width", zone.largeur - 2 * MARGE);
+            var cadre = fenetre[0].getBoundingClientRect(),
+                gauche = Math.max(zone.gauche + MARGE, Math.min(cadre.left, zone.gauche + zone.largeur - MARGE - cadre.width)),
+                haut = Math.max(zone.haut, cadre.top);
             (gauche != cadre.left || haut != cadre.top) &&
             fenetre.css({
                 left: (parseFloat(fenetre.css("left")) || 0) + gauche - cadre.left,
@@ -2266,6 +2275,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.6": [
+                    {
+                        class: "",
+                        txt: "Sur mobile, les popins occupent toute la largeur visible de l'écran au lieu de la moitié quand la page est dézoomée",
+                    },
+                ],
                 "3.16.5": [
                     {
                         class: "",
@@ -4661,7 +4676,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.5",
+    versionScript = "3.16.6",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
