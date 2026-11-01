@@ -277,6 +277,28 @@ $(document).on("click", "#exporter_donnees", exporterDonnees);
     document.addEventListener("touchend", finTouche, { passive: !0, capture: !0 });
     document.addEventListener("touchcancel", finTouche, { passive: !0, capture: !0 });
 })();
+
+// Petits écrans : les popins ne dépassent pas de l'écran. Certaines sont placées après leur ouverture
+// (rapport, notes de version centrés pour 800 à 850 px), d'où l'ajustement différé.
+(function () {
+    var MARGE = 5;
+    GM_addStyle(".ui-dialog {max-width:calc(100vw - " + 2 * MARGE + "px)}");
+    $(document).on("dialogopen", function (evenement) {
+        setTimeout(function () {
+            var fenetre = $(evenement.target).closest(".ui-dialog");
+            if (!fenetre.is(":visible")) return;
+            var largeurEcran = document.documentElement.clientWidth,
+                cadre = fenetre[0].getBoundingClientRect(),
+                gauche = Math.max(MARGE, Math.min(cadre.left, largeurEcran - MARGE - cadre.width)),
+                haut = Math.max(0, cadre.top);
+            (gauche != cadre.left || haut != cadre.top) &&
+            fenetre.css({
+                left: (parseFloat(fenetre.css("left")) || 0) + gauche - cadre.left,
+                top: (parseFloat(fenetre.css("top")) || 0) + haut - cadre.top,
+            });
+        }, 0);
+    });
+})();
 !(function (e) {
     e.widget("custom.tooltipX", e.ui.tooltip, {
         options: {
@@ -2248,6 +2270,14 @@ function afficherNotesVersion() {
                     {
                         class: "",
                         txt: "Sur mobile, déplacement au doigt de toutes les fenêtres (popins, bloc notes, stocks, panda…) et redimensionnement des popins, y compris avec Firefox Android",
+                    },
+                    {
+                        class: "",
+                        txt: "Sur petit écran, les popins (rapport, notes de version…) tiennent dans la largeur de l'écran",
+                    },
+                    {
+                        class: "",
+                        txt: "La croix de fermeture des popins est de nouveau visible",
                     },
                 ],
                 "3.16.4": [

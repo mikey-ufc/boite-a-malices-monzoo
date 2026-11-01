@@ -250,10 +250,13 @@ a.ui-button:active,
     right: 0.6em;
     border: none;
     background: transparent;
+    /* Sans ça, la croix prend la couleur des boutons, invisible sur la barre de titre */
+    color: var(--bam-entete-texte);
 }
 .ui-dialog .ui-dialog-titlebar-close:hover,
 .ui-dialog .ui-dialog-titlebar-close:focus {
     background: rgba(255, 255, 255, 0.2);
+    color: var(--bam-entete-texte);
 }
 .ui-dialog .ui-dialog-titlebar-close .ui-icon {
     background-image: url("images/ui-icons_ffffff_256x240.png");
