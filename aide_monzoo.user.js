@@ -145,48 +145,85 @@ function exporterDonnees() {
 $(document).on("click", "#importer_donnees", importerDonnees);
 $(document).on("click", "#exporter_donnees", exporterDonnees);
 
-// Déplacement et redimensionnement des popins au doigt : jQuery UI ne gère que la souris.
-// On suit donc le doigt nous-mêmes sur la barre de titre et les poignées, et on place la popin directement
+// Déplacement et redimensionnement au doigt : jQuery UI ne gère que la souris.
+// On suit donc le doigt nous-mêmes sur les poignées (barre de titre des popins, titre des bulles, panda…)
+// et on place l'élément directement, puis on appelle ses fonctions de fin de déplacement comme le ferait jQuery UI
 // (simuler des événements souris ne fonctionne pas sous Firefox Android avec Tampermonkey).
 (function () {
-    var ZONES_TACTILES = ".ui-dialog-titlebar, .ui-dialog .ui-resizable-handle",
-        EXCLUSIONS = ".ui-dialog-titlebar-close, button, a, input, select, textarea",
+    var DEPLACEMENT = ".ui-draggable-handle",
+        REDIMENSION = ".ui-dialog .ui-resizable-handle",
+        EXCLUSIONS = "button, a, input, select, textarea",
         geste = null;
-    GM_addStyle(".ui-dialog-titlebar, .ui-dialog .ui-resizable-handle {touch-action:none}");
+    GM_addStyle(DEPLACEMENT + ", " + REDIMENSION + " {touch-action:none}");
     function toucheSuivie(evenement) {
         if (!geste) return null;
         for (var i = 0; i < evenement.changedTouches.length; i++)
             if (evenement.changedTouches[i].identifier == geste.id) return evenement.changedTouches[i];
         return null;
     }
+    function declencher(instance, type, evenement, ui) {
+        // Appel direct du déclencheur de base : celui de draggable/resizable suppose une session souris en cours
+        $.Widget.prototype._trigger.call(instance, type, $.Event(evenement), ui);
+    }
+    function infosUi(g) {
+        var element = g.element;
+        return {
+            helper: element,
+            element: element,
+            position: { left: parseFloat(element.css("left")) || 0, top: parseFloat(element.css("top")) || 0 },
+            offset: element.offset(),
+            size: { width: element.width(), height: element.height() },
+            originalPosition: { left: g.gauche, top: g.haut },
+            originalSize: { width: g.largeur, height: g.hauteur },
+        };
+    }
     document.addEventListener(
         "touchstart",
         function (evenement) {
-            if (1 != evenement.touches.length) return;
+            if (1 != evenement.touches.length || !evenement.target.closest) return;
             var cible = evenement.target,
-                zone = cible.closest ? cible.closest(ZONES_TACTILES) : null;
-            if (!zone || cible.closest(EXCLUSIONS)) return;
-            var fenetre = $(zone).closest(".ui-dialog"),
-                contenu = fenetre.children(".ui-dialog-content"),
-                redimension = $(zone).hasClass("ui-resizable-handle");
-            if (!contenu.length || !contenu.dialog("option", redimension ? "resizable" : "draggable")) return;
+                poignee = cible.closest(REDIMENSION),
+                redimension = !!poignee,
+                element,
+                instance;
+            if (redimension) {
+                element = $(poignee).closest(".ui-resizable");
+                instance = element.resizable("instance");
+            } else {
+                if (cible.closest(EXCLUSIONS)) return;
+                // On remonte les éléments déplaçables et on vérifie leur option handle : la classe ui-draggable-handle
+                // manque quand la poignée est ajoutée après l'appel à draggable() (cas du panda)
+                for (var noeud = cible.closest(".ui-draggable"); noeud && !instance; noeud = noeud.parentElement && noeud.parentElement.closest(".ui-draggable")) {
+                    var candidat = $(noeud).draggable("instance"),
+                        selecteurPoignee = candidat && candidat.options.handle;
+                    if (!candidat) continue;
+                    poignee = selecteurPoignee ? $(cible).closest($(noeud).find(selecteurPoignee))[0] : noeud;
+                    poignee && ((element = $(noeud)), (instance = candidat));
+                }
+                if (!instance || (instance.options.cancel && $(cible).closest(instance.options.cancel).length)) return;
+                // Pour que le navigateur ne fasse plus défiler la page depuis cette poignée
+                $(poignee).addClass("ui-draggable-handle");
+            }
+            if (!instance || instance.options.disabled) return;
             var touche = evenement.changedTouches[0];
             geste = {
                 id: touche.identifier,
                 x: touche.clientX,
                 y: touche.clientY,
-                fenetre: fenetre,
-                contenu: contenu,
+                cible: cible,
+                element: element,
+                instance: instance,
+                aBouge: !1,
                 // Sens de redimensionnement (n, se, w…), null pour un déplacement
-                sens: redimension ? (zone.className.match(/ui-resizable-(se|sw|ne|nw|n|e|s|w)\b/) || ["", ""])[1] : null,
-                gauche: parseFloat(fenetre.css("left")) || 0,
-                haut: parseFloat(fenetre.css("top")) || 0,
-                largeur: fenetre.outerWidth(),
-                hauteur: fenetre.outerHeight(),
-                // L'option width de jQuery UI ne compte pas bordure et marge intérieure, contrairement à height
-                bordsLargeur: fenetre.outerWidth() - fenetre.width(),
+                sens: redimension ? (poignee.className.match(/ui-resizable-(se|sw|ne|nw|n|e|s|w)\b/) || ["", ""])[1] : null,
+                gauche: parseFloat(element.css("left")) || 0,
+                haut: parseFloat(element.css("top")) || 0,
+                largeur: element.outerWidth(),
+                hauteur: element.outerHeight(),
+                // L'option width des popins ne compte pas bordure et marge intérieure, contrairement à height
+                bordsLargeur: element.outerWidth() - element.width(),
             };
-            contenu.dialog("moveToTop");
+            element.hasClass("ui-dialog") && element.children(".ui-dialog-content").dialog("moveToTop");
         },
         { passive: !0, capture: !0 },
     );
@@ -199,41 +236,43 @@ $(document).on("click", "#exporter_donnees", exporterDonnees);
             var dx = touche.clientX - geste.x,
                 dy = touche.clientY - geste.y,
                 gauche = geste.gauche + dx,
-                haut = geste.haut + dy;
-            if (null !== geste.sens) {
+                haut = geste.haut + dy,
+                redimension = null !== geste.sens;
+            geste.aBouge || ((geste.aBouge = !0), declencher(geste.instance, "start", evenement, infosUi(geste)));
+            if (redimension) {
                 var sens = geste.sens,
                     largeur = geste.largeur,
-                    hauteur = geste.hauteur;
+                    hauteur = geste.hauteur,
+                    contenu = geste.element.children(".ui-dialog-content");
                 gauche = geste.gauche;
                 haut = geste.haut;
                 -1 != sens.indexOf("e") && (largeur += dx);
                 -1 != sens.indexOf("w") && (largeur -= dx);
                 -1 != sens.indexOf("s") && (hauteur += dy);
                 -1 != sens.indexOf("n") && (hauteur -= dy);
-                largeur = Math.max(geste.contenu.dialog("option", "minWidth") || 150, largeur);
-                hauteur = Math.max(geste.contenu.dialog("option", "minHeight") || 150, hauteur);
+                largeur = Math.max(contenu.dialog("option", "minWidth") || 150, largeur);
+                hauteur = Math.max(contenu.dialog("option", "minHeight") || 150, hauteur);
                 -1 != sens.indexOf("w") && (gauche = geste.gauche + geste.largeur - largeur);
                 -1 != sens.indexOf("n") && (haut = geste.haut + geste.hauteur - hauteur);
                 // Changer la taille repositionne la popin selon son option position : on la replace juste après
-                geste.contenu.dialog("option", { width: largeur - geste.bordsLargeur, height: hauteur });
+                contenu.dialog("option", { width: largeur - geste.bordsLargeur, height: hauteur });
             }
-            // La barre de titre ne doit pas sortir par le haut, sinon on ne peut plus la saisir
-            geste.fenetre.css({ left: gauche, top: Math.max(0, haut) });
+            // Le haut ne doit pas sortir de l'écran, sinon on ne peut plus saisir la poignée
+            geste.element.css({ left: gauche, top: Math.max(0, haut) });
+            declencher(geste.instance, redimension ? "resize" : "drag", evenement, infosUi(geste));
         },
         { passive: !1, capture: !0 },
     );
     function finTouche(evenement) {
         if (!toucheSuivie(evenement)) return;
-        // Mémorise la nouvelle place, comme le fait jQuery UI à la fin d'un déplacement à la souris
-        var decalage = geste.fenetre.offset(),
-            gauche = Math.round(decalage.left - $(document).scrollLeft()),
-            haut = Math.round(decalage.top - $(document).scrollTop());
-        geste.contenu.dialog("option", "position", {
-            my: "left top",
-            at: "left" + (gauche >= 0 ? "+" : "") + gauche + " top" + (haut >= 0 ? "+" : "") + haut,
-            of: window,
-        });
+        var fini = geste;
         geste = null;
+        if (!fini.aBouge) return;
+        // Fonctions de fin : mémorisation de la position (popins, bulles, panda…)
+        declencher(fini.instance, "stop", evenement, infosUi(fini));
+        // À la souris, un clic suit toujours la fin d'un déplacement (le panda s'en sert pour ne pas s'ouvrir) ;
+        // au doigt le navigateur n'en émet pas après un glissement, on le reproduit
+        null === fini.sens && fini.cible.isConnected && fini.cible.click();
     }
     document.addEventListener("touchend", finTouche, { passive: !0, capture: !0 });
     document.addEventListener("touchcancel", finTouche, { passive: !0, capture: !0 });
@@ -2208,7 +2247,7 @@ function afficherNotesVersion() {
                 "3.16.5": [
                     {
                         class: "",
-                        txt: "Nouvelle méthode pour déplacer et redimensionner les fenêtres au doigt sur mobile, qui fonctionne désormais avec Firefox Android",
+                        txt: "Sur mobile, déplacement au doigt de toutes les fenêtres (popins, bloc notes, stocks, panda…) et redimensionnement des popins, y compris avec Firefox Android",
                     },
                 ],
                 "3.16.4": [
