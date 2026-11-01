@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.3
+// @version			3.16.4
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.3",
+                version: "3.16.4",
                 donnees: donnees,
             }),
         ],
@@ -158,7 +158,6 @@ $(document).on("click", "#exporter_donnees", exporterDonnees);
             new MouseEvent(type, {
                 bubbles: !0,
                 cancelable: !0,
-                view: window,
                 clientX: touche.clientX,
                 clientY: touche.clientY,
                 screenX: touche.screenX,
@@ -2175,6 +2174,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.4": [
+                    {
+                        class: "",
+                        txt: "Correction du déplacement des fenêtres au doigt sur mobile, qui ne fonctionnait pas en 3.16.3",
+                    },
+                ],
                 "3.16.3": [
                     {
                         class: "",
@@ -4550,7 +4555,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.3",
+    versionScript = "3.16.4",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
