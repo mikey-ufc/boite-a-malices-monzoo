@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.4
+// @version			3.16.5
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.4",
+                version: "3.16.5",
                 donnees: donnees,
             }),
         ],
@@ -145,67 +145,98 @@ function exporterDonnees() {
 $(document).on("click", "#importer_donnees", importerDonnees);
 $(document).on("click", "#exporter_donnees", exporterDonnees);
 
-// Déplacement et redimensionnement des popins au doigt : jQuery UI ne gère que la souris,
-// on traduit donc les événements tactiles en événements souris sur la barre de titre et les poignées.
+// Déplacement et redimensionnement des popins au doigt : jQuery UI ne gère que la souris.
+// On suit donc le doigt nous-mêmes sur la barre de titre et les poignées, et on place la popin directement
+// (simuler des événements souris ne fonctionne pas sous Firefox Android avec Tampermonkey).
 (function () {
-    var ZONES_TACTILES = ".ui-dialog-titlebar, .ui-resizable-handle",
+    var ZONES_TACTILES = ".ui-dialog-titlebar, .ui-dialog .ui-resizable-handle",
         EXCLUSIONS = ".ui-dialog-titlebar-close, button, a, input, select, textarea",
-        toucheEnCours = null,
-        aBouge = !1;
-    GM_addStyle(".ui-dialog-titlebar, .ui-resizable-handle {touch-action:none}");
-    function simulerSouris(type, touche, cible) {
-        cible.dispatchEvent(
-            new MouseEvent(type, {
-                bubbles: !0,
-                cancelable: !0,
-                clientX: touche.clientX,
-                clientY: touche.clientY,
-                screenX: touche.screenX,
-                screenY: touche.screenY,
-                button: 0,
-                buttons: "mouseup" == type ? 0 : 1,
-            }),
-        );
+        geste = null;
+    GM_addStyle(".ui-dialog-titlebar, .ui-dialog .ui-resizable-handle {touch-action:none}");
+    function toucheSuivie(evenement) {
+        if (!geste) return null;
+        for (var i = 0; i < evenement.changedTouches.length; i++)
+            if (evenement.changedTouches[i].identifier == geste.id) return evenement.changedTouches[i];
+        return null;
     }
     document.addEventListener(
         "touchstart",
         function (evenement) {
             if (1 != evenement.touches.length) return;
-            var cible = evenement.target;
-            if (!cible.closest || !cible.closest(ZONES_TACTILES) || cible.closest(EXCLUSIONS)) return;
-            toucheEnCours = { id: evenement.changedTouches[0].identifier, cible: cible };
-            aBouge = !1;
-            simulerSouris("mousedown", evenement.changedTouches[0], cible);
+            var cible = evenement.target,
+                zone = cible.closest ? cible.closest(ZONES_TACTILES) : null;
+            if (!zone || cible.closest(EXCLUSIONS)) return;
+            var fenetre = $(zone).closest(".ui-dialog"),
+                contenu = fenetre.children(".ui-dialog-content"),
+                redimension = $(zone).hasClass("ui-resizable-handle");
+            if (!contenu.length || !contenu.dialog("option", redimension ? "resizable" : "draggable")) return;
+            var touche = evenement.changedTouches[0];
+            geste = {
+                id: touche.identifier,
+                x: touche.clientX,
+                y: touche.clientY,
+                fenetre: fenetre,
+                contenu: contenu,
+                // Sens de redimensionnement (n, se, w…), null pour un déplacement
+                sens: redimension ? (zone.className.match(/ui-resizable-(se|sw|ne|nw|n|e|s|w)\b/) || ["", ""])[1] : null,
+                gauche: parseFloat(fenetre.css("left")) || 0,
+                haut: parseFloat(fenetre.css("top")) || 0,
+                largeur: fenetre.outerWidth(),
+                hauteur: fenetre.outerHeight(),
+                // L'option width de jQuery UI ne compte pas bordure et marge intérieure, contrairement à height
+                bordsLargeur: fenetre.outerWidth() - fenetre.width(),
+            };
+            contenu.dialog("moveToTop");
         },
-        { passive: !0 },
+        { passive: !0, capture: !0 },
     );
-    function toucheSuivie(evenement) {
-        if (!toucheEnCours) return null;
-        for (var i = 0; i < evenement.changedTouches.length; i++)
-            if (evenement.changedTouches[i].identifier == toucheEnCours.id) return evenement.changedTouches[i];
-        return null;
-    }
     document.addEventListener(
         "touchmove",
         function (evenement) {
             var touche = toucheSuivie(evenement);
             if (!touche) return;
-            aBouge = !0;
             evenement.preventDefault();
-            simulerSouris("mousemove", touche, toucheEnCours.cible);
+            var dx = touche.clientX - geste.x,
+                dy = touche.clientY - geste.y,
+                gauche = geste.gauche + dx,
+                haut = geste.haut + dy;
+            if (null !== geste.sens) {
+                var sens = geste.sens,
+                    largeur = geste.largeur,
+                    hauteur = geste.hauteur;
+                gauche = geste.gauche;
+                haut = geste.haut;
+                -1 != sens.indexOf("e") && (largeur += dx);
+                -1 != sens.indexOf("w") && (largeur -= dx);
+                -1 != sens.indexOf("s") && (hauteur += dy);
+                -1 != sens.indexOf("n") && (hauteur -= dy);
+                largeur = Math.max(geste.contenu.dialog("option", "minWidth") || 150, largeur);
+                hauteur = Math.max(geste.contenu.dialog("option", "minHeight") || 150, hauteur);
+                -1 != sens.indexOf("w") && (gauche = geste.gauche + geste.largeur - largeur);
+                -1 != sens.indexOf("n") && (haut = geste.haut + geste.hauteur - hauteur);
+                // Changer la taille repositionne la popin selon son option position : on la replace juste après
+                geste.contenu.dialog("option", { width: largeur - geste.bordsLargeur, height: hauteur });
+            }
+            // La barre de titre ne doit pas sortir par le haut, sinon on ne peut plus la saisir
+            geste.fenetre.css({ left: gauche, top: Math.max(0, haut) });
         },
-        { passive: !1 },
+        { passive: !1, capture: !0 },
     );
     function finTouche(evenement) {
-        var touche = toucheSuivie(evenement);
-        if (!touche) return;
-        // Après un glissement, on bloque les événements souris que le navigateur émettrait en plus
-        aBouge && evenement.cancelable && evenement.preventDefault();
-        simulerSouris("mouseup", touche, toucheEnCours.cible);
-        toucheEnCours = null;
+        if (!toucheSuivie(evenement)) return;
+        // Mémorise la nouvelle place, comme le fait jQuery UI à la fin d'un déplacement à la souris
+        var decalage = geste.fenetre.offset(),
+            gauche = Math.round(decalage.left - $(document).scrollLeft()),
+            haut = Math.round(decalage.top - $(document).scrollTop());
+        geste.contenu.dialog("option", "position", {
+            my: "left top",
+            at: "left" + (gauche >= 0 ? "+" : "") + gauche + " top" + (haut >= 0 ? "+" : "") + haut,
+            of: window,
+        });
+        geste = null;
     }
-    document.addEventListener("touchend", finTouche, { passive: !1 });
-    document.addEventListener("touchcancel", finTouche, { passive: !1 });
+    document.addEventListener("touchend", finTouche, { passive: !0, capture: !0 });
+    document.addEventListener("touchcancel", finTouche, { passive: !0, capture: !0 });
 })();
 !(function (e) {
     e.widget("custom.tooltipX", e.ui.tooltip, {
@@ -2174,6 +2205,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.16.5": [
+                    {
+                        class: "",
+                        txt: "Nouvelle méthode pour déplacer et redimensionner les fenêtres au doigt sur mobile, qui fonctionne désormais avec Firefox Android",
+                    },
+                ],
                 "3.16.4": [
                     {
                         class: "",
@@ -4555,7 +4592,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.4",
+    versionScript = "3.16.5",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
