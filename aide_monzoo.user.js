@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.16.6
+// @version			3.17.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.16.6",
+                version: "3.17.0",
                 donnees: donnees,
             }),
         ],
@@ -2275,6 +2275,16 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.17.0": [
+                    {
+                        class: "",
+                        txt: "Sur la page d'achat d'animaux, bouton « Acheter jusqu'au bonus » : le script rachète les animaux choisis jusqu'à obtenir le nombre voulu d'animaux bonus dans l'enclos, dans la limite d'un nombre d'achats maximum. Un bandeau affiche l'avancement et permet d'arrêter à tout moment",
+                    },
+                    {
+                        class: "",
+                        txt: "Gabarit de l'amargasaure renseigné (4)",
+                    },
+                ],
                 "3.16.6": [
                     {
                         class: "",
@@ -4430,6 +4440,203 @@ function demarrerScanMaj() {
         GM_setValue(nomZoo + "_info_parc", JSON.stringify(parc)),
         (window.location.href = urlBase + "event.php"));
 }
+// Achat jusqu'au bonus : rachète les animaux choisis sur la page d'achat jusqu'à ce que le nombre voulu
+// d'animaux bonus soit arrivé dans l'enclos. Après chaque achat validé, le jeu revient dans l'enclos :
+// on y compte les animaux bonus (liste « Afficher », ex : « Colibri thalassin - (2M, 2F, 0†, 0♡) »).
+// Étapes : enclos (comptage de départ) -> achat -> confirmation -> enclos (comptage) -> achat...
+function gererAchatJusquauBonus() {
+    var cleEtat = nomZoo + "_achat_bonus",
+        etat = JSON.parse(GM_getValue(cleEtat, "null")),
+        typeEnclos = parametreUrl(window.location.href, "t"),
+        numeroEnclos = parametreUrl(window.location.href, "v"),
+        pageAchatAnimaux = "achat" == pageCourante && /achat_animaux2?\.php/.test(window.location),
+        pageEnclos = "enclos" == pageCourante && parseInt(typeEnclos) < 2,
+        minuteur;
+
+    function cleEspece(libelle) {
+        return $.trim(libelle)
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .replace(/[-'’]/g, " ");
+    }
+    // Animaux bonus présents dans l'enclos, hors espèces achetées : { total, detail: { cle: { m, f } } }
+    function compterBonus() {
+        var resultat = { total: 0, detail: {} };
+        $("select option").each(function () {
+            var lu = /^(.+?) - \((\d+)M, (\d+)F/.exec($(this).text()),
+                cle;
+            lu &&
+            ((cle = cleEspece(lu[1])),
+            especes[cle] &&
+            especes[cle].bonus &&
+            -1 == etat.especesAchetees.indexOf(cle) &&
+            ((resultat.detail[cle] = { m: parseInt(lu[2]), f: parseInt(lu[3]) }),
+                (resultat.total += resultat.detail[cle].m + resultat.detail[cle].f)));
+        });
+        return resultat;
+    }
+    function bandeau(html, enCours) {
+        $("#achat_bonus_bandeau").remove();
+        $("<div id='achat_bonus_bandeau'>")
+            .css({
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                "z-index": 1e4,
+                padding: "8px",
+                "text-align": "center",
+                "font-weight": "bold",
+                background: enCours ? "#fee4bd" : "#d6f5d6",
+                "border-bottom": "2px solid #D19260",
+            })
+            .html(
+                html +
+                ' <button id="achat_bonus_fermer" style="margin-left:10px">' +
+                (enCours ? "Arrêter" : "Fermer") +
+                "</button>",
+            )
+            .appendTo("body");
+        $("#achat_bonus_fermer").on("click", function () {
+            (clearTimeout(minuteur), GM_deleteValue(cleEtat), $("#achat_bonus_bandeau").remove());
+        });
+    }
+    function arreter(message) {
+        (GM_deleteValue(cleEtat), journaliser("Achat jusqu'au bonus : " + message.replace(/<[^>]+>/g, "")), bandeau(message, !1));
+    }
+    function avancement() {
+        return (
+            "Achat jusqu'au bonus : achat " +
+            etat.achatsFaits +
+            "/" +
+            etat.achatsMax +
+            (null === etat.bonusDepart ? "" : ", bonus obtenus " + etat.bonusObtenus + "/" + etat.bonusVoulus)
+        );
+    }
+    function plusTard(action) {
+        minuteur = setTimeout(action, 800);
+    }
+
+    if (!etat) {
+        if (!pageAchatAnimaux) return;
+        var boutonAchat = $('input:submit[value="Acheter l\'animal"]');
+        if (!boutonAchat.length) return;
+        var reglages = JSON.parse(GM_getValue("achat_bonus_reglages", '{"bonusVoulus":1,"achatsMax":50}'));
+        $(
+            '<div id="achat_bonus" style="margin:10px 0;text-align:center">' +
+            '<button type="button" id="achat_bonus_lancer" class="action">Acheter jusqu\'au bonus</button>' +
+            ' <label>Bonus voulus : <input type="number" id="achat_bonus_voulus" min="1" max="99" style="width:45px" value="' +
+            reglages.bonusVoulus +
+            '"></label>' +
+            ' <label>Achats max : <input type="number" id="achat_bonus_max" min="1" max="999" style="width:55px" value="' +
+            reglages.achatsMax +
+            '"></label></div>',
+        ).insertAfter(boutonAchat);
+        $("#achat_bonus_lancer").on("click", function () {
+            var choix = {},
+                especesAchetees = [],
+                bonusVoulus = parseInt($("#achat_bonus_voulus").val()),
+                achatsMax = parseInt($("#achat_bonus_max").val());
+            $('select[name^="choix["]').each(function () {
+                // Nom du champ : choix[vautour des marais1], 1 = mâle, 2 = femelle
+                var nomChamp = this.name.slice(6, -1),
+                    cle = cleEspece(nomChamp.slice(0, -1));
+                parseInt(this.value) > 0 &&
+                ((choix[nomChamp] = this.value), -1 == especesAchetees.indexOf(cle) && especesAchetees.push(cle));
+            });
+            if (!especesAchetees.length) return void alert("Choisissez d'abord les animaux à acheter dans les menus déroulants");
+            if (!(bonusVoulus > 0 && achatsMax > 0)) return void alert("Indiquez un nombre de bonus et un nombre d'achats maximum");
+            GM_setValue("achat_bonus_reglages", JSON.stringify({ bonusVoulus: bonusVoulus, achatsMax: achatsMax }));
+            GM_setValue(
+                cleEtat,
+                JSON.stringify({
+                    urlAchat: window.location.href,
+                    t: typeEnclos,
+                    v: numeroEnclos,
+                    choix: choix,
+                    especesAchetees: especesAchetees,
+                    bonusVoulus: bonusVoulus,
+                    achatsMax: achatsMax,
+                    achatsFaits: 0,
+                    bonusDepart: null,
+                    bonusObtenus: 0,
+                    etape: "comptage",
+                }),
+            );
+            // Comptage de départ dans l'enclos avant le premier achat
+            window.location.href = urlBase + "enclosgestion1.php?t=" + typeEnclos + "&v=" + numeroEnclos;
+        });
+        return;
+    }
+
+    if (pageEnclos) {
+        if (typeEnclos != etat.t || numeroEnclos != etat.v) return void arreter("arrêté, vous avez changé d'enclos");
+        var bonus = compterBonus();
+        if (null === etat.bonusDepart) ((etat.bonusDepart = bonus.total), (etat.detailDepart = bonus.detail));
+        else if (((etat.bonusObtenus = bonus.total - etat.bonusDepart), etat.bonusObtenus >= etat.bonusVoulus)) {
+            // Détail par espèce et par sexe de ce qui est arrivé depuis le départ
+            var noms = [];
+            for (var cle in bonus.detail) {
+                var depart = etat.detailDepart[cle] || { m: 0, f: 0 },
+                    males = bonus.detail[cle].m - depart.m,
+                    femelles = bonus.detail[cle].f - depart.f,
+                    sexes = [];
+                (males > 0 && sexes.push(males + " mâle" + (males > 1 ? "s" : "")),
+                femelles > 0 && sexes.push(femelles + " femelle" + (femelles > 1 ? "s" : "")),
+                sexes.length && noms.push(especes[cle].singulier + " (" + sexes.join(" et ") + ")"));
+            }
+            return void arreter(
+                etat.bonusObtenus +
+                " animal" +
+                (etat.bonusObtenus > 1 ? "aux" : "") +
+                " bonus obtenu" +
+                (etat.bonusObtenus > 1 ? "s" : "") +
+                " en " +
+                etat.achatsFaits +
+                " achat" +
+                (etat.achatsFaits > 1 ? "s" : "") +
+                " : " +
+                noms.join(", "),
+            );
+        }
+        if (etat.achatsFaits >= etat.achatsMax)
+            return void arreter(
+                "arrêté après " +
+                etat.achatsFaits +
+                " achats (maximum atteint), " +
+                etat.bonusObtenus +
+                " bonus obtenu" +
+                (etat.bonusObtenus > 1 ? "s" : "") +
+                " sur " +
+                etat.bonusVoulus,
+            );
+        ((etat.etape = "achat"), GM_setValue(cleEtat, JSON.stringify(etat)), bandeau(avancement(), !0));
+        plusTard(function () {
+            window.location.href = etat.urlAchat;
+        });
+    } else if (pageAchatAnimaux && "achat" == etat.etape) {
+        var boutonAcheter = $('input:submit[value="Acheter l\'animal"]');
+        if (!boutonAcheter.length) return void arreter("arrêté, bouton d'achat introuvable");
+        ((etat.etape = "confirmation"), GM_setValue(cleEtat, JSON.stringify(etat)), bandeau(avancement(), !0));
+        // Choix remplis au dernier moment : l'ajout des options 10 à 25 (innerHTML +=) remet les menus à zéro
+        plusTard(function () {
+            ($('select[name^="choix["]').val("0"),
+                $.each(etat.choix, function (nomChamp, quantite) {
+                    $('select[name="choix[' + nomChamp + ']"]').val(quantite);
+                }),
+                boutonAcheter.click());
+        });
+    } else if ("achatConfirmation" == pageCourante && "confirmation" == etat.etape) {
+        var boutonValider = $('input:submit[value="Validez votre achat"]');
+        if (!boutonValider.length)
+            return void arreter("arrêté, le jeu n'a pas proposé de valider l'achat (voir le message du jeu ci-dessous)");
+        (etat.achatsFaits++, (etat.etape = "retour"), GM_setValue(cleEtat, JSON.stringify(etat)), bandeau(avancement(), !0));
+        plusTard(function () {
+            boutonValider.click();
+        });
+    } else arreter("arrêté, vous avez quitté les pages d'achat");
+}
 function journaliser(message) {
     (console.log(message), GM_setValue(nomZoo + "_log", GM_getValue(nomZoo + "_log", "") + message + "<br>"));
 }
@@ -4676,7 +4883,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.16.6",
+    versionScript = "3.17.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -5294,7 +5501,7 @@ for (
     especes.pteranodon = new Espece("ptéranodon", "", 5e4, 2, 10),
     especes.sarcosaure = new Espece("sarcosaure", "", 5e4, 3, 10),
     especes.stegosaure = new Espece("stégosaure", "", 5e4, 4, 10),
-    especes.amargasaure = new Espece("amargasaure", "", 50000, 0, 10),
+    especes.amargasaure = new Espece("amargasaure", "", 50000, 4, 10),
     especes.edmontosaure = new Espece("edmontosaure", "", 500000, 0, 10, 8),
     especes["cerf huppe"] = new Espece("cerf huppé", "cerfs huppés", 185000, 3, 4),
     especes.gibbon = new Espece("gibbon", "", 245000, 2, 4, 0, "1 stock si 8 naissances de singes en 1 maj"),
@@ -5443,6 +5650,7 @@ if (
             stockLu,
             urlTemp,
             filtreSelection = "";
+        scanMajEnCours || gererAchatJusquauBonus();
         switch (
             (parc.premier_scan &&
             parc.infoscan.scan_messages &&
