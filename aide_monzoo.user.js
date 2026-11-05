@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.17.0
+// @version			3.18.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.17.0",
+                version: "3.18.0",
                 donnees: donnees,
             }),
         ],
@@ -2025,11 +2025,12 @@ function creerPanda() {
     var htmlPreferences =
         '<span id="version">Aide_monzoo v <span style="font-size:11px">' +
         versionScript +
-        '</span></span><h2 class="inactif"><a id="lien_pref_general">Général</a></h2><div id="pref_general"><p><label for="decalage_horaire">Décalage horaire :</label><input type="text" id="decalage_horaire" class="inptxt2" maxlength="3" size="2"></p><p><a id="popNotesVersion" class="action">Voir les notes de version</a></p><h3 class="inactif"><a id="lien_pref_encadrement">Encadrement pré-mort et naissances</a></h3><div id="pref_encadrement"><input id="select_1" type="radio" name="choix_encadrement" value="1">Encadrement complet (image + barre)<br><input id="select_2" type="radio" name="choix_encadrement" value="2">Encadrement de la barre de vie</div></div><h2 class="inactif"><a id="lien_pref_tableau">Tableau des animaux de l\'enclos</a></h2><div id="pref_tableau"><h3><a id="lien_pref_tri">Tri</a></h3><div id="pref_tri" style="margin-left:12px;"><input type="radio" name="choix_tri" value="1">Par nom<br><input type="radio" name="choix_tri" value="2">Par prix<br><input type="radio" name="choix_tri" value="3">Par nombre d\'animaux<br><input type="radio" name="choix_tri" value="4">Par nombre de mâle<br><input type="radio" name="choix_tri" value="5">Par nombre de femelle<br></div><h3><a id="lien_pref_couple">Type d\'affichage</a></h3><div id="pref_couple" style="margin-left:12px;"><input type="radio" name="choix_couple" value="1">Total<br><input type="radio" name="choix_couple" value="2">Total+Adulte<br><input type="radio" name="choix_couple" value="3">Total+Bébé<br><input type="radio" name="choix_couple" value="4">Adulte+Bébé<br></div></div><h2 class="inactif"><a id="lien_pref_scan_maj">Scan de mise à jour DE CE PARC</a></h2><div id="pref_scan_maj"><fieldset id="scanmajfait"><p><label for="gestion">Lancement espions et stocks :</label><input type="checkbox" id="gestion"></p><p><label for="vente_surpopulation">Vente de la surpopulation :</label><input type="checkbox" id="vente_surpopulation"></p><p title="' +
+        '</span></span><h2 class="inactif"><a id="lien_pref_general">Général</a></h2><div id="pref_general"><p><label for="decalage_horaire">Décalage horaire :</label><input type="text" id="decalage_horaire" class="inptxt2" maxlength="3" size="2"></p><p><a id="popNotesVersion" class="action">Voir les notes de version</a></p><h3 class="inactif"><a id="lien_pref_encadrement">Encadrement pré-mort et naissances</a></h3><div id="pref_encadrement"><input id="select_1" type="radio" name="choix_encadrement" value="1">Encadrement complet (image + barre)<br><input id="select_2" type="radio" name="choix_encadrement" value="2">Encadrement de la barre de vie</div></div><h2 class="inactif"><a id="lien_pref_tableau">Tableau des animaux de l\'enclos</a></h2><div id="pref_tableau"><h3><a id="lien_pref_tri">Tri</a></h3><div id="pref_tri" style="margin-left:12px;"><input type="radio" name="choix_tri" value="1">Par nom<br><input type="radio" name="choix_tri" value="2">Par prix<br><input type="radio" name="choix_tri" value="3">Par nombre d\'animaux<br><input type="radio" name="choix_tri" value="4">Par nombre de mâle<br><input type="radio" name="choix_tri" value="5">Par nombre de femelle<br></div><h3><a id="lien_pref_couple">Type d\'affichage</a></h3><div id="pref_couple" style="margin-left:12px;"><input type="radio" name="choix_couple" value="1">Total<br><input type="radio" name="choix_couple" value="2">Total+Adulte<br><input type="radio" name="choix_couple" value="3">Total+Bébé<br><input type="radio" name="choix_couple" value="4">Adulte+Bébé<br></div></div><h2 class="inactif"><a id="lien_pref_scan_maj">Scan de mise à jour DE CE PARC</a></h2><div id="pref_scan_maj"><fieldset id="scanmajfait"><p><label for="gestion">Lancement espions et stocks :</label><input type="checkbox" id="gestion"></p><p><label for="explorateur">Envoi des explorateurs :</label><input type="checkbox" id="explorateur"></p><p><label for="vente_surpopulation">Vente de la surpopulation :</label><input type="checkbox" id="vente_surpopulation"></p><p title="' +
         texteAideSurpopulation() +
         '" style="margin-left:18px;margin-top:-4px;width:max-content"><label style="width:129px">Surpopulation collective :</label><input type="text" id="valeur_surpopulation" class="inptxt2" maxlength="2" size="2"></p><p style="margin-left:18px"><button id="gestion_exclusions" class="action" style="color:hotpink"><a class="action" style="color:hotpink">Cliquez ici pour gérer la liste des exclusions</a></button></p><p><label for="vente_mourant">Vente des mourants :</label><input type="checkbox" id="vente_mourant"></p><p><button id="scan_de_maj" class="action"><a class="action">Lancer un scan de maj avec les choix ci-dessus</a></button></p></fieldset></div><h2 class="inactif"><a id="lien_pref_rapport">Rapport</a></h2><div id="pref_rapport"><p><label for="rapport_mode_image">Animaux en mode image :</label><input type="checkbox" id="rapport_mode_image"></p></div><h2 class="inactif"><a id="lien_pref_bulletin">Bulletin</a></h2><div id="pref_bulletin"><h3><a id="lien_pref_couleurs">Couleurs</a></h3><div id="pref_couleurs"><p><label for="couleur_nomzoo">Nom du zoo :</label><input type="text" class="inptxt" id="couleur_nomzoo" maxlength="7" size="7"></p><p><label for="couleur_base">Base :</label><input type="text" class="inptxt" id="couleur_base" maxlength="7" size="7"></p><p><label for="couleur_cher">Animaux > 100000 Zoo\'s :</label><input type="text" class="inptxt" id="couleur_cher" maxlength="7" size="7"></p><p><label for="couleur_bonus">Animaux bonus :</label><input type="text" class="inptxt" id="couleur_bonus" maxlength="7" size="7"></p><p><label for="couleur_albinos">Albinos :</label><input type="text" class="inptxt" id="couleur_albinos" maxlength="7" size="7"></p><p><label for="couleur_vols">Vols :</label><input type="text" class="inptxt" id="couleur_vols" maxlength="7" size="7"></p></div><h3><a id="lien_pref_nomzoo">Préférences</a></h3><div id="pref_nomzoo"><p><label for="nomzoo">Afficher nom des zoos :</label><input type="checkbox" id="nomzoo"></p><p><label for="achats">Afficher mes achats :</label><input type="checkbox" id="achats"></p></div></div><h2 class="inactif"><a id="lien_pref_infos">Infos DE CE PARC</a></h2><div id="pref_infos"><h3 class="inactif"><a id="lien_pref_historique">Historique des naissances</a></h3><div id="pref_historique"><a id="affiche_historique" class="action">Afficher</a><br><a id="raz_historique" class="action">Remettre à zéro</a></div></div><h2 class="inactif"><a id="lien_pref_debug">Debug</a></h2><div id="pref_debug"><p><a id="relance_scan_initial" class="action">Relancer un scan initial de tous les enclos</a></p><p><a id="voir_log" class="action">Afficher le log</a></p><p><a id="affiche_ajout_animal" class="action">Ajouter une nouvelle espèce</a></p><p><a id="affiche_modif_animal" class="action">Modifier une espèce ajoutée</a></p><p><a id="control_animaux" class="action">Contrôler les espèces ajoutées</a></p><p><a id="importer_donnees" class="action">Importer mes données (fichier JSON)</a></p><p><a id="exporter_donnees" class="action">Exporter mes données (fichier JSON)</a></p></div>';
     $("<div>").attr("id", "preferences").addClass("info_bulle").append(htmlPreferences).appendTo(conteneurPanda);
     ($("#gestion").prop("checked", parc.gestion),
+        $("#explorateur").prop("checked", !!parc.explorateur),
         $("#decalage_horaire").val(prefsUtilisateur.decalage_horaire).on("input", changerDecalageHoraire),
         $("#select_" + prefsUtilisateur.encadrement).prop("checked", !0),
         $("#valeur_surpopulation").val(parc.infoscan.surpopulation).on("input", changerSurpopulation),
@@ -2068,7 +2069,7 @@ function creerPanda() {
         parId("lien_pref_" + sections[indexBoucle]).addEventListener("click", deplierSectionPanda, !1);
     ($(".inptxt").on("change", changerCouleur),
         $('[name="choix_tri"], [name="choix_encadrement"], [name="choix_couple"]').on("change", changerChoixAffichage));
-    var casesACocher = ["gestion", "vente_surpopulation", "vente_mourant", "rapport_mode_image", "nomzoo", "achats"];
+    var casesACocher = ["gestion", "explorateur", "vente_surpopulation", "vente_mourant", "rapport_mode_image", "nomzoo", "achats"];
     for (indexBoucle in casesACocher) $("#" + casesACocher[indexBoucle]).on("click", changerOptionCase);
     ($("#popNotesVersion").on("click", afficherNotesVersion),
         $("#affiche_historique").on("click", afficherHistoriqueNaissances),
@@ -2261,9 +2262,9 @@ function changerOptionCase() {
             ? (prefsUtilisateur[idCase] = coche)
             : ("nomzoo" != idCase && "achats" != idCase) || (prefsUtilisateur.bulletin[idCase] = coche),
             GM_setValue("info_user", JSON.stringify(prefsUtilisateur)))
-        : ("gestion" == idCase
+        : ("gestion" == idCase || "explorateur" == idCase
             ? ((parc[idCase] = coche), $("#" + idCase + "2") && $("#" + idCase + "2").prop("checked", coche))
-            : "gestion2" == idCase
+            : "gestion2" == idCase || "explorateur2" == idCase
                 ? ((parc[idCasePrincipale] = coche), $("#" + idCasePrincipale).prop("checked", coche))
                 : "vente_surpopulation" == idCase || "vente_mourant" == idCase
                     ? ((parc.infoscan[idCase] = coche), $("#" + idCase + "2") && $("#" + idCase + "2").prop("checked", coche))
@@ -2275,6 +2276,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.18.0": [
+                    {
+                        class: "",
+                        txt: "Nouvelle option du scan de mise à jour « Envoi des explorateurs » : le script fouille des cases libres de l'explorateur tant qu'il reste des expéditions et que l'argent suffit. Le résultat de chaque expédition apparaît dans le rapport du scan",
+                    },
+                ],
                 "3.17.0": [
                     {
                         class: "",
@@ -3459,7 +3466,7 @@ function lancerScanMaj() {
         : (GM_deleteValue("PAtsenclos2"),
             parc.infoscan.scan_suite
                 ? (window.location.href = urlBase + "zonemembre.php")
-                : (window.location.href = urlBase + "espion.php"));
+                : (window.location.href = urlBase + pageApresEnclos()));
 }
 function gererExclusions() {
     if (!parId("div_gestExclus")) {
@@ -4283,7 +4290,7 @@ function proposerScanBourse() {
 }
 function proposerScanMaj() {
     var htmlOptionsScan =
-            '<br><ul style="font-weight:bold;font-size:0.8em;color:#982298;list-style-type:none"><li style="margin-top:10px">Lancement espions et stocks : <input type="checkbox" id="gestion2"></li><li style="margin-top:8px">Vente de la surpopulation : <input type="checkbox" id="vente_surpopulation2"></li><div style="margin-left:23px;width:max-content" title="' +
+            '<br><ul style="font-weight:bold;font-size:0.8em;color:#982298;list-style-type:none"><li style="margin-top:10px">Lancement espions et stocks : <input type="checkbox" id="gestion2"></li><li style="margin-top:8px">Envoi des explorateurs : <input type="checkbox" id="explorateur2"></li><li style="margin-top:8px">Vente de la surpopulation : <input type="checkbox" id="vente_surpopulation2"></li><div style="margin-left:23px;width:max-content" title="' +
             texteAideSurpopulation() +
             '">Surpopulation collective : <input type="text" id="valeur_surpopulation2" maxlength="2" size="2" tyle="height:12px;font-size:10px"></div><li style="margin-left:8px"><a id="gestion_exclusions2" class="action" style="color:hotpink">Cliquez ici pour gérer la liste des exclusions</a></li><li style="margin-top:6px">Vente des mourants : <input type="checkbox" id="vente_mourant2"></li></ul>',
         dialogueScan = $("<div>").attr("id", "ScanMAJ");
@@ -4304,11 +4311,12 @@ function proposerScanMaj() {
             },
         }),
         $("#gestion2").prop("checked", parc.gestion),
+        $("#explorateur2").prop("checked", !!parc.explorateur),
         $("#valeur_surpopulation2").val(parc.infoscan.surpopulation).on("input", changerSurpopulation),
         $("#vente_surpopulation2").prop("checked", parc.infoscan.vente_surpopulation),
         $("#gestion_exclusions2").on("click", gererExclusions),
         $("#vente_mourant2").prop("checked", parc.infoscan.vente_mourant));
-    var idsCases = ["gestion2", "vente_surpopulation2", "vente_mourant2"];
+    var idsCases = ["gestion2", "explorateur2", "vente_surpopulation2", "vente_mourant2"];
     for (dialogueScan in idsCases) $("#" + idsCases[dialogueScan]).on("click", changerOptionCase);
     var fenetreDialogue = parId("ScanMAJ").parentNode;
     (fenetreDialogue.setAttribute(
@@ -4424,7 +4432,8 @@ function demarrerScanMaj() {
                     am: !0,
                 }),
                 (parc.infoscan.type_mise_a_jour = "14h"));
-    ((parc.infoscan.scan_suite = !parc.gestion),
+    ((parc.infoscan.scan_suite = !(parc.gestion || parc.explorateur)),
+        (parc.infoscan.nb_expeditions = 0),
         (parc.infoscan.scan_messages = !1),
         (parc.infoscan.attraction = ""),
         (parc.infoscan.vols = []),
@@ -4636,6 +4645,47 @@ function gererAchatJusquauBonus() {
             boutonValider.click();
         });
     } else arreter("arrêté, vous avez quitté les pages d'achat");
+}
+// Page où continue le scan une fois les enclos vérifiés : espions et stocks, sinon directement l'explorateur
+function pageApresEnclos() {
+    return parc.gestion ? "espion.php" : "explorateur.php";
+}
+// Envoi des explorateurs pendant le scan : clic sur une case libre au hasard (25 cases, croix rouge = déjà fouillée)
+// tant qu'il reste des expéditions et que l'argent suffit, puis fin du scan.
+function envoyerExplorateurs() {
+    var texte = document.body.textContent,
+        message = $(".msg").first(),
+        restantes = /Vous pouvez encore r\S+ (\d+) exp/.exec(texte),
+        prix = /prix par exp\S+ : (\d+)/.exec(texte),
+        argent = parseInt($('div[onmouseover*="argent"]').first().text(), 10),
+        casesLibres = $('a[href*="case="]').filter(function () {
+            return !$(this).find('img[src*="exploration_lose"]').length;
+        });
+
+    // Résultat de l'expédition qui vient d'être faite
+    /[?&]case=/.test(window.location.search) &&
+    message.length &&
+    ((parc.infoscan.messages["explorateur_" + parc.infoscan.nb_expeditions] =
+        "Explorateur : " + $.trim(message.text().replace(/\s+/g, " "))),
+        journaliser("Explorateur : " + $.trim(message.text().replace(/\s+/g, " "))));
+    restantes = restantes ? parseInt(restantes[1], 10) : 0;
+    prix = prix ? parseInt(prix[1], 10) : 0;
+    // Limite de sécurité : jamais plus de 10 expéditions par scan
+    if (restantes > 0 && prix > 0 && argent >= prix && casesLibres.length && parc.infoscan.nb_expeditions < 10) {
+        var lien = casesLibres.eq(Math.floor(Math.random() * casesLibres.length));
+        (parc.infoscan.nb_expeditions++,
+            GM_setValue(nomZoo + "_info_parc", JSON.stringify(parc)),
+            window.setTimeout(function () {
+                window.location.href = lien.prop("href");
+            }, 800));
+    } else
+        (restantes > 0 &&
+        argent < prix &&
+        (parc.infoscan.messages.explorateur_argent =
+            "Explorateur : pas assez d'argent pour " + restantes + " expédition(s) à " + formaterNombre(prix) + " Zoo'z"),
+            (parc.infoscan.scan_suite = !0),
+            GM_setValue(nomZoo + "_info_parc", JSON.stringify(parc)),
+            (window.location.href = urlBase + "zonemembre.php"));
 }
 function journaliser(message) {
     (console.log(message), GM_setValue(nomZoo + "_log", GM_getValue(nomZoo + "_log", "") + message + "<br>"));
@@ -4883,7 +4933,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.17.0",
+    versionScript = "3.18.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -5566,6 +5616,8 @@ if (
                                                     ? "messages"
                                                     : /espion.php/.test(window.location)
                                                         ? "espion"
+                                                        : /explorateur.php/.test(window.location)
+                                                        ? "explorateur"
                                                         : /bureau.php/.test(window.location)
                                                             ? "personnel"
                                                             : /bureau2.php/.test(window.location)
@@ -5886,6 +5938,10 @@ if (
                     ? declencherClic(parBalise("input")[0])
                     : (window.location.href = urlBase + "bureau4.php")));
                 break;
+            case "explorateur":
+                journaliser("Explorateur");
+                scanMajEnCours && !parc.infoscan.scan_suite && parc.explorateur && envoyerExplorateurs();
+                break;
             case "personnel":
                 journaliser("Personnel");
                 break;
@@ -5947,9 +6003,11 @@ if (
                             );
                     }),
                     !stockAjoute &&
-                    ((parc.infoscan.scan_suite = !0),
-                        GM_setValue(nomZoo + "_info_parc", JSON.stringify(parc)),
-                        (window.location.href = urlBase + "zonemembre.php")));
+                    (parc.explorateur
+                        ? (window.location.href = urlBase + "explorateur.php")
+                        : ((parc.infoscan.scan_suite = !0),
+                            GM_setValue(nomZoo + "_info_parc", JSON.stringify(parc)),
+                            (window.location.href = urlBase + "zonemembre.php"))));
                 }
                 break;
             case "achatConfirmation": {
@@ -6419,7 +6477,7 @@ if (
                                     ? (GM_setValue("PAtsenclos3", !0), (window.location.href = urlBase + "animaux.php?choix_type=savane"))
                                     : parc.infoscan.scan_suite
                                         ? (window.location.href = urlBase + "zonemembre.php")
-                                        : (window.location.href = urlBase + "espion.php"),
+                                        : (window.location.href = urlBase + pageApresEnclos()),
                                 ""
                         );
                     ajouterLiensNavigation(idEnclos);
@@ -7187,7 +7245,7 @@ if (
                         GM_deleteValue("PAtsenclos3"),
                         parc.infoscan.scan_suite
                             ? (window.location.href = urlBase + "zonemembre.php")
-                            : (window.location.href = urlBase + "espion.php"));
+                            : (window.location.href = urlBase + pageApresEnclos()));
                 else {
                     var typeSuivant = "";
                     switch (objetTemp) {
