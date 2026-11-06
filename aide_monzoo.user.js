@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.18.0
+// @version			3.18.1
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.18.0",
+                version: "3.18.1",
                 donnees: donnees,
             }),
         ],
@@ -2276,6 +2276,16 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.18.1": [
+                    {
+                        class: "",
+                        txt: "Ajout du dendrolague, débloqué par les bagarres de team",
+                    },
+                    {
+                        class: "",
+                        txt: "Rapport du scan : le résultat de chaque expédition de l'explorateur est résumé en « rien trouvé » ou « nouvelle espèce débloquée ! »",
+                    },
+                ],
                 "3.18.0": [
                     {
                         class: "",
@@ -4662,12 +4672,17 @@ function envoyerExplorateurs() {
             return !$(this).find('img[src*="exploration_lose"]').length;
         });
 
-    // Résultat de l'expédition qui vient d'être faite
-    /[?&]case=/.test(window.location.search) &&
-    message.length &&
-    ((parc.infoscan.messages["explorateur_" + parc.infoscan.nb_expeditions] =
-        "Explorateur : " + $.trim(message.text().replace(/\s+/g, " "))),
-        journaliser("Explorateur : " + $.trim(message.text().replace(/\s+/g, " "))));
+    // Résultat de l'expédition qui vient d'être faite (le jeu ne nomme pas l'espèce découverte)
+    if (/[?&]case=/.test(window.location.search) && message.length) {
+        var texteMessage = $.trim(message.text().replace(/\s+/g, " ")),
+            resultat = /nouvelle race animale/i.test(texteMessage)
+                ? /débloquer/i.test(texteMessage)
+                    ? '<span class="exploration">nouvelle espèce débloquée !</span>'
+                    : "rien trouvé"
+                : texteMessage;
+        parc.infoscan.messages["explorateur_" + parc.infoscan.nb_expeditions] = "Explorateur : " + resultat;
+        journaliser("Explorateur : " + texteMessage);
+    }
     restantes = restantes ? parseInt(restantes[1], 10) : 0;
     prix = prix ? parseInt(prix[1], 10) : 0;
     // Limite de sécurité : jamais plus de 10 expéditions par scan
@@ -4933,7 +4948,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.18.0",
+    versionScript = "3.18.1",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -5554,6 +5569,7 @@ for (
     especes.amargasaure = new Espece("amargasaure", "", 50000, 4, 10),
     especes.edmontosaure = new Espece("edmontosaure", "", 500000, 0, 10, 8),
     especes["cerf huppe"] = new Espece("cerf huppé", "cerfs huppés", 185000, 3, 4),
+    especes.dendrolague = new Espece("dendrolague", "", 215000, 0, 4, 0, "débloqué par les bagarres de team"),
     especes.gibbon = new Espece("gibbon", "", 245000, 2, 4, 0, "1 stock si 8 naissances de singes en 1 maj"),
     especes.tamarin = new Espece("tamarin", "", 370000, 1, 4),
     especes["chien viverin"] = new Espece("chien viverin", "chiens viverins", 282500, 2, 3, 8),
