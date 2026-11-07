@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.20.1
+// @version			3.21.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.20.1",
+                version: "3.21.0",
                 donnees: donnees,
             }),
         ],
@@ -1289,6 +1289,22 @@ function creerIconeEnclos(refEnclos) {
                                     : $(debutHtml + "ileauxdinos" + finHtml))
             : $('<div style="display:none"></div>');
 }
+// Type d'enclos (numéro de Espece.enclos : 1 savane, 2 bassin… 10 île aux dinos) d'après t et v de l'adresse
+function numeroTypeEnclos(t, v) {
+    return (
+        (t = parseInt(t, 10)),
+        (v = parseInt(v, 10)),
+        1 == t
+            ? 5 + v
+            : v <= 9 || (v >= 41 && v <= 45)
+                ? 1
+                : v <= 15 || (v >= 46 && v <= 50)
+                    ? 2
+                    : v <= 29 || (v >= 51 && v <= 55)
+                        ? 3
+                        : 4
+    );
+}
 function libelleEnclos(refEnclos) {
     var parties = refEnclos.split("_");
     return (
@@ -2285,6 +2301,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.21.0": [
+                    {
+                        class: "",
+                        txt: "Achat jusqu'au bonus : quand l'enclos peut recevoir plusieurs animaux bonus, cochez ceux que vous visez ; seuls ceux-là arrêtent les achats. Le choix est retenu pour chaque enclos",
+                    },
+                ],
                 "3.20.1": [
                     {
                         class: "",
@@ -4539,6 +4561,7 @@ function gererAchatJusquauBonus() {
             especes[cle] &&
             especes[cle].bonus &&
             -1 == etat.especesAchetees.indexOf(cle) &&
+            (!etat.especesVisees || -1 != etat.especesVisees.indexOf(cle)) &&
             ((resultat.detail[cle] = { m: parseInt(lu[2]), f: parseInt(lu[3]) }),
                 (resultat.total += resultat.detail[cle].m + resultat.detail[cle].f)));
         });
@@ -4590,7 +4613,18 @@ function gererAchatJusquauBonus() {
         if (!pageAchatAnimaux) return;
         var boutonAchat = $('input:submit[value="Acheter l\'animal"]');
         if (!boutonAchat.length) return;
-        var reglages = JSON.parse(GM_getValue("achat_bonus_reglages", '{"bonusVoulus":1,"achatsMax":50}'));
+        var reglages = JSON.parse(GM_getValue("achat_bonus_reglages", '{"bonusVoulus":1,"achatsMax":50}')),
+            refEnclos = typeEnclos + "_" + numeroEnclos,
+            typeNumero = numeroTypeEnclos(typeEnclos, numeroEnclos),
+            // Espèces bonus de ce type d'enclos ; choix mémorisé par enclos (toutes cochées par défaut)
+            especesBonus = Object.keys(especes)
+                .filter(function (cle) {
+                    return especes[cle].bonus && parseInt(especes[cle].enclos, 10) == typeNumero;
+                })
+                .sort(function (cleA, cleB) {
+                    return especes[cleA].singulier.localeCompare(especes[cleB].singulier);
+                }),
+            viseesMemorisees = (reglages.visees || {})[refEnclos];
         $(
             '<div id="achat_bonus" style="margin:10px 0;text-align:center">' +
             '<button type="button" id="achat_bonus_lancer" class="action">Acheter jusqu\'au bonus</button>' +
@@ -4599,7 +4633,25 @@ function gererAchatJusquauBonus() {
             '"></label>' +
             ' <label>Achats max : <input type="number" id="achat_bonus_max" min="1" max="999" style="width:55px" value="' +
             reglages.achatsMax +
-            '"></label></div>',
+            '"></label>' +
+            (especesBonus.length > 1
+                ? '<div id="achat_bonus_visees" style="margin-top:6px">Bonus visés : ' +
+                especesBonus
+                    .map(function (cle) {
+                        return (
+                            '<label style="margin:0 6px;white-space:nowrap"><input type="checkbox" value="' +
+                            cle +
+                            '"' +
+                            (!viseesMemorisees || -1 != viseesMemorisees.indexOf(cle) ? " checked" : "") +
+                            "> " +
+                            especes[cle].singulier +
+                            "</label>"
+                        );
+                    })
+                    .join("") +
+                "</div>"
+                : "") +
+            "</div>",
         ).insertAfter(boutonAchat);
         $("#achat_bonus_lancer").on("click", function () {
             var choix = {},
@@ -4615,7 +4667,18 @@ function gererAchatJusquauBonus() {
             });
             if (!especesAchetees.length) return void alert("Choisissez d'abord les animaux à acheter dans les menus déroulants");
             if (!(bonusVoulus > 0 && achatsMax > 0)) return void alert("Indiquez un nombre de bonus et un nombre d'achats maximum");
-            GM_setValue("achat_bonus_reglages", JSON.stringify({ bonusVoulus: bonusVoulus, achatsMax: achatsMax }));
+            // Sans cases (une seule espèce bonus ou aucune) : tous les bonus comptent, comme avant
+            var especesVisees = $("#achat_bonus_visees").length
+                ? $("#achat_bonus_visees input:checked")
+                    .map(function () {
+                        return this.value;
+                    })
+                    .get()
+                : null;
+            if (especesVisees && !especesVisees.length) return void alert("Cochez au moins un animal bonus visé");
+            ((reglages.bonusVoulus = bonusVoulus), (reglages.achatsMax = achatsMax));
+            especesVisees && ((reglages.visees = reglages.visees || {}), (reglages.visees[refEnclos] = especesVisees));
+            GM_setValue("achat_bonus_reglages", JSON.stringify(reglages));
             GM_setValue(
                 cleEtat,
                 JSON.stringify({
@@ -4624,6 +4687,7 @@ function gererAchatJusquauBonus() {
                     v: numeroEnclos,
                     choix: choix,
                     especesAchetees: especesAchetees,
+                    especesVisees: especesVisees,
                     bonusVoulus: bonusVoulus,
                     achatsMax: achatsMax,
                     achatsFaits: 0,
@@ -5102,7 +5166,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.20.1",
+    versionScript = "3.21.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
