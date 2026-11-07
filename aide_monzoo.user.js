@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.21.0
+// @version			3.21.1
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.21.0",
+                version: "3.21.1",
                 donnees: donnees,
             }),
         ],
@@ -2301,6 +2301,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.21.1": [
+                    {
+                        class: "",
+                        txt: "Navigation « Avec naissance » : les enclos sont repris du rapport journalier des messages, qui indique l'enclos de chaque naissance. La navigation est donc exacte dès la fin du scan",
+                    },
+                ],
                 "3.21.0": [
                     {
                         class: "",
@@ -4516,6 +4522,7 @@ function demarrerScanMaj() {
         (parc.infoscan.attraction = ""),
         (parc.infoscan.vols = []),
         (parc.infoscan.naissances = {}),
+        delete parc.infoscan.enclos_naissances,
         Object.keys(parc.encls || {}).forEach(function (cleEnclos) {
             delete parc.encls[cleEnclos].naissance;
         }),
@@ -4957,9 +4964,12 @@ function ajouterLiensNavigation(refEnclos, nonConstruit) {
         ["mourant", "Avec mourant", "bam_mourant"],
         [
             function (cleEnclos) {
-                // Enclos ouvert depuis la mise à jour : on sait s'il a un nouveau-né ;
-                // sinon, on suppose une naissance s'il contient une espèce née d'après le rapport
-                return "boolean" == typeof parc.encls[cleEnclos].naissance
+                // Rapport journalier lu : il donne l'enclos de chaque naissance. Sinon, enclos ouvert depuis
+                // la mise à jour : on sait s'il a un nouveau-né ; sinon, on suppose une naissance s'il contient
+                // une espèce née d'après le rapport
+                return parc.infoscan.enclos_naissances
+                    ? !0 === parc.infoscan.enclos_naissances[cleEnclos]
+                    : "boolean" == typeof parc.encls[cleEnclos].naissance
                     ? parc.encls[cleEnclos].naissance
                     : Object.keys(parc.encls[cleEnclos].animaux || {}).some(function (nomEspece) {
                         return especesNees.indexOf(nomEspece) != -1;
@@ -5166,7 +5176,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.21.0",
+    versionScript = "3.21.1",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -6429,6 +6439,7 @@ if (
                     elementEnfant,
                     indexNoms = 0,
                     indexGenres = 0,
+                    enclosRapport = "",
                     evenementsTraites = JSON.parse(GM_getValue("messages", "[]")),
                     divsMessages = parBalise("div", parBalise("table")[1]);
                 for (var divMessage of divsMessages)
@@ -6457,7 +6468,16 @@ if (
                                                             ? (sectionDeces = !0)
                                                             : sectionDeces
                                                                 ? (parc.infoscan.deces[indexNoms++] = nomEspece)
-                                                                : (parc.infoscan.naissances[indexNoms++] = nomEspece));
+                                                                : ((parc.infoscan.naissances[indexNoms++] = nomEspece),
+                                                                enclosRapport &&
+                                                                ((parc.infoscan.enclos_naissances = parc.infoscan.enclos_naissances || {}),
+                                                                    (parc.infoscan.enclos_naissances[enclosRapport] = !0))));
+                                            else if ("A" == elementEnfant.tagName && /enclosgestion1/.test(elementEnfant.getAttribute("href")))
+                                                // « Enclos Bassin n°5 - Cliquez ici pour voir l'enclos » : enclos des naissances qui suivent
+                                                enclosRapport =
+                                                    parametreUrl(elementEnfant.getAttribute("href"), "t") +
+                                                    "_" +
+                                                    parametreUrl(elementEnfant.getAttribute("href"), "v");
                                             else if ("IMG" == elementEnfant.tagName) {
                                                 if (((urlTemp = elementEnfant.getAttribute("src")), /images\/animaux/.test(urlTemp))) continue;
                                                 /icone_male/.test(urlTemp)
