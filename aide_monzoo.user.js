@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.20.0
+// @version			3.20.1
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.20.0",
+                version: "3.20.1",
                 donnees: donnees,
             }),
         ],
@@ -2285,6 +2285,12 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.20.1": [
+                    {
+                        class: "",
+                        txt: "Navigation des enclos : les boutons enclos précédent et suivant sont sur la même ligne que les pastilles",
+                    },
+                ],
                 "3.20.0": [
                     {
                         class: "",
@@ -4853,7 +4859,7 @@ function ajouterLiensNavigation(refEnclos, nonConstruit) {
     var suivant = enclosSuivant(refEnclos),
         precedent = enclosPrecedent(refEnclos),
         especesNees = especesNeesDerniereMaj(),
-        htmlLiens = '<div id="bloc_liens" class="bam_nav"><div class="bam_nav_enclos">';
+        htmlLiens = '<div id="bloc_liens" class="bam_nav">';
     function lienEnclos(cible, texte, classe) {
         var cle = cible.t + "_" + cible.v;
         return (
@@ -4862,12 +4868,12 @@ function ajouterLiensNavigation(refEnclos, nonConstruit) {
         );
     }
     GM_addStyle(
-        ".bam_nav{padding:4px 0 10px}" +
+        ".bam_nav{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;padding:4px 0 10px}" +
         ".bam_nav a{text-decoration:none}" +
-        ".bam_nav_enclos{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}" +
+        ".bam_nav_vide{min-width:1px}" +
         ".bam_nav_bouton{padding:3px 10px;border:1px solid #D19260;border-radius:12px;background:#F7E3C0;color:#6b3d16;font-weight:bold;font-size:11px}" +
         ".bam_nav_bouton:hover{background:#D19260;color:#fff}" +
-        ".bam_nav_criteres{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}" +
+        ".bam_nav_criteres{flex:1;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}" +
         ".bam_pastille{display:inline-flex;align-items:center;gap:6px;padding:2px 4px;border:1px solid;border-radius:14px;font-size:11px;font-weight:bold}" +
         ".bam_pastille .bam_compte{min-width:16px;padding:0 4px;border-radius:8px;color:#fff;text-align:center}" +
         ".bam_pastille .bam_fleche{width:18px;height:18px;line-height:18px;border-radius:50%;text-align:center;color:inherit}" +
@@ -4878,9 +4884,9 @@ function ajouterLiensNavigation(refEnclos, nonConstruit) {
         ".bam_naissance{background:#e3f4dc;border-color:#4a9a3a;color:#2e6b22}.bam_naissance .bam_compte{background:#4a9a3a}",
     );
     htmlLiens +=
-        ("debut" != precedent.t ? lienEnclos(precedent, "◀ " + libelleEnclos(precedent.t + "_" + precedent.v), "bam_nav_bouton") : "<span></span>") +
-        ("fin" != suivant.t ? lienEnclos(suivant, libelleEnclos(suivant.t + "_" + suivant.v) + " ▶", "bam_nav_bouton") : "<span></span>") +
-        '</div><div class="bam_nav_criteres">';
+        ("debut" != precedent.t
+            ? lienEnclos(precedent, "◀ " + libelleEnclos(precedent.t + "_" + precedent.v), "bam_nav_bouton")
+            : '<span class="bam_nav_vide"></span>') + '<div class="bam_nav_criteres">';
     // Une pastille « ◀ libellé (nombre d'enclos) ▶ » par critère, seulement s'il existe un autre enclos qui y répond
     [
         ["a_verifier", "À vérifier", "bam_verif"],
@@ -4913,7 +4919,12 @@ function ajouterLiensNavigation(refEnclos, nonConstruit) {
             ("fin" != suivantAvec.t ? lienEnclos(suivantAvec, "▶", "bam_fleche") : '<span class="bam_fleche">▶</span>') +
             "</span>");
     });
-    htmlLiens += "</div></div>";
+    htmlLiens +=
+        "</div>" +
+        ("fin" != suivant.t
+            ? lienEnclos(suivant, libelleEnclos(suivant.t + "_" + suivant.v) + " ▶", "bam_nav_bouton")
+            : '<span class="bam_nav_vide"></span>') +
+        "</div>";
     var ligneLiens = parBalise("tbody", (tables = parBalise("table"))[1])[0].insertRow(0),
         cellule = ligneLiens.insertCell(0);
     ((cellule.colSpan = 2), (cellule.innerHTML = htmlLiens));
@@ -5091,7 +5102,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.20.0",
+    versionScript = "3.20.1",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
