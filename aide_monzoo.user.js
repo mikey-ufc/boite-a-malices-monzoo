@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.18.1
+// @version			3.19.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.18.1",
+                version: "3.19.0",
                 donnees: donnees,
             }),
         ],
@@ -2276,6 +2276,16 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.19.0": [
+                    {
+                        class: "",
+                        txt: "Dans un enclos, sélectionnez une espèce dans le tableau des animaux puis cliquez sur l'icône d'achat : la page d'achat s'ouvre directement sur cette espèce, ou indique qu'elle n'est pas disponible à l'achat",
+                    },
+                    {
+                        class: "",
+                        txt: "Sur la page d'achat, un bandeau en bas de page affiche le total des animaux choisis et le compare à votre argent disponible (en rouge si le total le dépasse)",
+                    },
+                ],
                 "3.18.1": [
                     {
                         class: "",
@@ -4126,7 +4136,7 @@ function afficherTableauPopulation(animauxEnclos, modeScan) {
                 '<img src="images/icones/icone_achat.png" id="img_vente_animaux" alt="Vente multiple" title="Vente multiple"' +
                 styleIcones),
                 (htmlIcones +=
-                    '<img id="img_achat" src="images/icones/baby.png" onclick="window.location.href=\'achat_animaux' +
+                    '<img id="img_achat" src="images/icones/baby.png" data-url="achat_animaux' +
                     (aucunAnimal ? "2" : "") +
                     ".php?t=" +
                     typeEtNumero.t +
@@ -4134,7 +4144,7 @@ function afficherTableauPopulation(animauxEnclos, modeScan) {
                     (1e3 * parseInt(typeEtNumero.t, 10) + parseInt(typeEtNumero.v, 10)) +
                     "&v=" +
                     typeEtNumero.v +
-                    '\'" alt="Achat" title="Achat"' +
+                    '" alt="Achat" title="Achat (va directement à l\'espèce sélectionnée dans le tableau)"' +
                     styleIcones));
     }
     htmlLignes =
@@ -4166,10 +4176,17 @@ function afficherTableauPopulation(animauxEnclos, modeScan) {
         ? $("#img_achat").on("click", function () {
             $('input:submit[value="Acheter l\'animal"]').click();
         })
-        : aucunAnimal ||
+        : ($("#img_achat").on("click", function () {
+            // Espèce sélectionnée (cerclée) dans le tableau : la page d'achat ira directement à elle
+            var animChoisi = $(".cerclage", "#population").first().parent().attr("anim");
+            window.location.href =
+                $(this).attr("data-url") +
+                (animChoisi && "tous" != animChoisi ? "#bam_animal=" + encodeURIComponent(animChoisi.replace(/_/g, " ")) : "");
+        }),
+        aucunAnimal ||
         $("#img_vente_animaux").on("click", function () {
             declencherClic(parId("button"));
-        }),
+        })),
         $("th.titre, th.male, th.femelle, td.titre, td.male, td.femelle", "#population").on(
             "click",
             filtrerParSelection,
@@ -4656,6 +4673,88 @@ function gererAchatJusquauBonus() {
         });
     } else arreter("arrêté, vous avez quitté les pages d'achat");
 }
+// Page d'achat : va à l'espèce sélectionnée dans le tableau de l'enclos (adresse en #bam_animal=<espèce>),
+// ou prévient si elle n'est pas à vendre. tablesEspeces : une table par espèce proposée.
+function allerAAnimalChoisi(tablesEspeces) {
+    var lu = /#bam_animal=([^&]+)/.exec(window.location.hash);
+    if (!lu) return;
+    var cle = decodeURIComponent(lu[1]),
+        nomAffiche = especes[cle] ? especes[cle].singulier : cle,
+        tableEspece = tablesEspeces.filter(function () {
+            return nomAnimalDepuisImage($(this).find("img:first").attr("src") || "") == cle;
+        }).first();
+    // On retire la marque de l'adresse : un rechargement (ou l'achat jusqu'au bonus) ne la rejoue pas
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    tableEspece.length &&
+    (tableEspece.css({ outline: "3px solid #D19260", "outline-offset": "2px" }), tableEspece[0].scrollIntoView({ block: "center" }));
+    if (tableEspece.find('select[name^="choix["]').length) return;
+    $("<div>")
+        .html("<p>« " + nomAffiche + " » n'est pas disponible à l'achat pour le moment.</p>")
+        .dialog({
+            title: "Animal indisponible",
+            modal: !0,
+            width: 350,
+            buttons: {
+                OK: function () {
+                    $(this).dialog("destroy").remove();
+                },
+            },
+        });
+}
+// Page d'achat : total des animaux choisis dans les menus, comparé à l'argent disponible (bandeau en bas de page).
+// Prix lu sur la page, sinon prix de la dernière bourse, sinon prix de base.
+function suivreTotalAchat() {
+    var bourse = JSON.parse(GM_getValue("bourse", "{}") || "{}"),
+        argent = parseInt($('div[onmouseover*="argent"]').first().text().replace(/\D/g, ""), 10);
+    function prixEspece(menu) {
+        var table = $(menu).closest("table"),
+            cle = nomAnimalDepuisImage(table.find("img:first").attr("src") || ""),
+            // « Prix : 454154 [icône] 14% » : le prix est écrit sans séparateur, suivi de la variation bourse
+            lu = /prix[^:\d]*:\s*(\d+)/i.exec(table.find("td:eq(1)").text());
+        return lu ? parseInt(lu[1], 10) : parseInt(bourse[cle], 10) || (especes[cle] ? especes[cle].prix : 0);
+    }
+    function majTotal() {
+        var total = 0,
+            nombre = 0;
+        $('select[name^="choix["]').each(function () {
+            var quantite = parseInt(this.value, 10) || 0;
+            quantite > 0 && ((nombre += quantite), (total += quantite * prixEspece(this)));
+        });
+        $("#total_achat").remove();
+        if (!nombre) return;
+        var depasse = argent >= 0 && total > argent;
+        $("<div id='total_achat'>")
+            .css({
+                position: "fixed",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                "z-index": 1e4,
+                padding: "8px",
+                "text-align": "center",
+                "font-weight": "bold",
+                background: depasse ? "#f8c8c8" : "#d6f5d6",
+                "border-top": "2px solid #D19260",
+            })
+            .html(
+                "Total : " +
+                nombre +
+                " animal" +
+                (nombre > 1 ? "aux" : "") +
+                " pour " +
+                formaterNombre(total) +
+                " Zoo'z" +
+                (argent >= 0
+                    ? " / argent disponible : " +
+                    formaterNombre(argent) +
+                    " Zoo'z" +
+                    (depasse ? " (il manque " + formaterNombre(total - argent) + " Zoo'z)" : "")
+                    : ""),
+            )
+            .appendTo("body");
+    }
+    ($(document).on("change", 'select[name^="choix["]', majTotal), majTotal());
+}
 // Page où continue le scan une fois les enclos vérifiés : espions et stocks, sinon directement l'explorateur
 function pageApresEnclos() {
     return parc.gestion ? "espion.php" : "explorateur.php";
@@ -4948,7 +5047,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.18.1",
+    versionScript = "3.19.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -6064,7 +6163,8 @@ if (
                         enclosNonConstruit
                             ? ajouterLiensNavigation(idEnclos + "_" + parametreUrl(window.location.href, "v"), !0)
                             : afficherTableauPopulation(),
-                        afficherStocks());
+                        afficherStocks(),
+                    scanMajEnCours || enclosNonConstruit || (allerAAnimalChoisi(tables), suivreTotalAchat()));
                 }
                 break;
             case "vente":
