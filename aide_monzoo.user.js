@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			Boite à malices pour monzoo
 // @namespace		https://github.com/mikey-ufc/boite-a-malices-monzoo
-// @version			3.19.0
+// @version			3.20.0
 // @author			Mikey_UFC
 // @description		Script apportant quelques corrections et ajouts pour un plus grand confort de jeu (version Tampermonkey)
 // @match			https://monzoo.net/*
@@ -119,7 +119,7 @@ function exporterDonnees() {
         [
             JSON.stringify({
                 __monzoo_export: 1,
-                version: "3.19.0",
+                version: "3.20.0",
                 donnees: donnees,
             }),
         ],
@@ -679,7 +679,10 @@ function enclosPrecedent(refEnclos) {
 function enclosPrecedentAvec(refEnclos, critere) {
     for (
         var precedent = enclosPrecedent(refEnclos);
-        "debut" != precedent.t && !0 !== parc.encls[precedent.t + "_" + precedent.v][critere];
+        "debut" != precedent.t &&
+        ("function" == typeof critere
+            ? !critere(precedent.t + "_" + precedent.v)
+            : !0 !== parc.encls[precedent.t + "_" + precedent.v][critere]);
     )
         precedent = enclosPrecedent(precedent.t + "_" + precedent.v);
     return precedent;
@@ -714,7 +717,13 @@ function enclosSuivantAvec(refEnclos, critere) {
                 }),
         "mouraverif" != critere)
     )
-        for (; "fin" != suivant.t && !0 !== parc.encls[suivant.t + "_" + suivant.v][critere];)
+        for (
+            ;
+            "fin" != suivant.t &&
+            ("function" == typeof critere
+                ? !critere(suivant.t + "_" + suivant.v)
+                : !0 !== parc.encls[suivant.t + "_" + suivant.v][critere]);
+        )
             suivant = enclosSuivant(suivant.t + "_" + suivant.v);
     else
         for (
@@ -2276,6 +2285,16 @@ function afficherNotesVersion() {
     if (!$("#information").length) {
         GM_addStyle(".important{font-size:16px;font-weight:bold;color:#ff0000;}.strong{font-weight:bold;}");
         var notesParVersion = {
+                "3.20.0": [
+                    {
+                        class: "",
+                        txt: "Dans un enclos, nouvelle navigation « Avec naissance » pour passer d'un enclos à l'autre parmi ceux où il y a eu des naissances à la dernière mise à jour (dès qu'un enclos a été ouvert, par vous ou par le scan, le script sait s'il contient vraiment un nouveau-né)",
+                    },
+                    {
+                        class: "",
+                        txt: "Nouveau look des liens de navigation des enclos : boutons avec le nom de l'enclos précédent et suivant, pastilles de couleur avec le nombre d'enclos à vérifier, avec mourant et avec naissance (survolez une flèche pour voir l'enclos visé)",
+                    },
+                ],
                 "3.19.0": [
                     {
                         class: "",
@@ -3861,6 +3880,7 @@ function analyserPageEnclos(reorganiser, modeInteractif) {
         cellulesPage = parBalise("td", parBalise("table")[3]),
         comptesParEspece = [],
         mourantPresent = !1,
+        naissancePresente = !1,
         animauxParJoursAVivre = [],
         conteneurPage = document.createElement("div");
     for (
@@ -3930,9 +3950,12 @@ function analyserPageEnclos(reorganiser, modeInteractif) {
                 ),
                 (parBalise("a", divAnimal)[0].href += "&nom=" + encodeURIComponent(nomAnimal) + "&sexe=" + sexe)),
             1 == joursAVivre && (mourantPresent = !0),
+            99 == joursAVivre && (naissancePresente = !0),
             reorganiser &&
             (animauxParJoursAVivre[joursAVivre] || (animauxParJoursAVivre[joursAVivre] = []),
                 animauxParJoursAVivre[joursAVivre].push(divAnimal))));
+    // Nouveau-né (99 jours à vivre) : naissance repérée précisément pour la navigation « Avec naissance »
+    parc.encls[idEnclos].naissance = naissancePresente;
     for (nomAnimal in ((parc.encls[idEnclos].mourant = mourantPresent), comptesParEspece))
         parc.encls[idEnclos].animaux[nomAnimal] = {
             male: comptesParEspece[nomAnimal].male,
@@ -4465,6 +4488,9 @@ function demarrerScanMaj() {
         (parc.infoscan.attraction = ""),
         (parc.infoscan.vols = []),
         (parc.infoscan.naissances = {}),
+        Object.keys(parc.encls || {}).forEach(function (cleEnclos) {
+            delete parc.encls[cleEnclos].naissance;
+        }),
         (parc.infoscan.genre_naissances = {
             male: {},
             femelle: {},
@@ -4493,7 +4519,7 @@ function gererAchatJusquauBonus() {
         return $.trim(libelle)
             .toLowerCase()
             .normalize("NFD")
-            .replace(/[̀-ͯ]/g, "")
+            .replace(/[\u0300-\u036f]/g, "")
             .replace(/[-'’]/g, " ");
     }
     // Animaux bonus présents dans l'enclos, hors espèces achetées : { total, detail: { cle: { m, f } } }
@@ -4813,63 +4839,81 @@ function supprimerDonneesZoo(nomZooCible) {
     -1 != listeZoos.indexOf(nomZooCible) && listeZoos.splice(listeZoos.indexOf(nomZooCible), 1),
         GM_setValue("liste_zoos", JSON.stringify(listeZoos)));
 }
+// Espèces nées à la dernière mise à jour (rapport journalier), en clés d'especes
+function especesNeesDerniereMaj() {
+    var naissances = (parc.infoscan && parc.infoscan.naissances) || {};
+    return Object.keys(naissances).map(function (indexNaissance) {
+        return String(naissances[indexNaissance])
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim();
+    });
+}
 function ajouterLiensNavigation(refEnclos, nonConstruit) {
     var suivant = enclosSuivant(refEnclos),
         precedent = enclosPrecedent(refEnclos),
-        suivantAVerifier = enclosSuivantAvec(refEnclos, "a_verifier"),
-        precedentAVerifier = enclosPrecedentAvec(refEnclos, "a_verifier"),
-        suivantMourant = enclosSuivantAvec(refEnclos, "mourant"),
-        precedentMourant = enclosPrecedentAvec(refEnclos, "mourant"),
-        htmlLiens = '<div id="bloc_liens">';
-    ("debut" != precedent.t &&
-    (htmlLiens +=
-        '<a href="enclosgestion1.php?t=' +
-        precedent.t +
-        "&v=" +
-        precedent.v +
-        '" style="float:left;cursor:pointer">Enclos précédent</a>'),
-    "fin" != suivant.t &&
-    (htmlLiens +=
-        '<a href="enclosgestion1.php?t=' +
-        suivant.t +
-        "&v=" +
-        suivant.v +
-        '" style="float:right;cursor:pointer">Enclos suivant</a>'),
-        (htmlLiens += '<div style="text-align:center">'),
-    "debut" != precedentAVerifier.t &&
-    (htmlLiens +=
-        '<a href="enclosgestion1.php?t=' +
-        precedentAVerifier.t +
-        "&v=" +
-        precedentAVerifier.v +
-        '" class="navigation"><<</a> '),
-    ("debut" == precedentAVerifier.t && "fin" == suivantAVerifier.t) || (htmlLiens += "Enclos à vérifier"),
-    "fin" != suivantAVerifier.t &&
-    (htmlLiens +=
-        ' <a href="enclosgestion1.php?t=' +
-        suivantAVerifier.t +
-        "&v=" +
-        suivantAVerifier.v +
-        '" class="navigation">>></a>'),
-    ("debut" == precedentAVerifier.t && "fin" == suivantAVerifier.t) ||
-    ("debut" == precedentMourant.t && "fin" == suivantMourant.t) ||
-    (htmlLiens += "<br>"),
-    "debut" != precedentMourant.t &&
-    (htmlLiens +=
-        '<a href="enclosgestion1.php?t=' +
-        precedentMourant.t +
-        "&v=" +
-        precedentMourant.v +
-        '" class="navigation"><<</a> '),
-    ("debut" == precedentMourant.t && "fin" == suivantMourant.t) || (htmlLiens += "Enclos avec mourant"),
-    "fin" != suivantMourant.t &&
-    (htmlLiens +=
-        ' <a href="enclosgestion1.php?t=' +
-        suivantMourant.t +
-        "&v=" +
-        suivantMourant.v +
-        '" class="navigation">>></a>'),
-        (htmlLiens += '</div><div style="margin-bottom:10px;clear:both"></div></div>'));
+        especesNees = especesNeesDerniereMaj(),
+        htmlLiens = '<div id="bloc_liens" class="bam_nav"><div class="bam_nav_enclos">';
+    function lienEnclos(cible, texte, classe) {
+        var cle = cible.t + "_" + cible.v;
+        return (
+            '<a href="enclosgestion1.php?t=' + cible.t + "&v=" + cible.v + '" class="' + classe + '" title="' +
+            libelleEnclos(cle) + '">' + texte + "</a>"
+        );
+    }
+    GM_addStyle(
+        ".bam_nav{padding:4px 0 10px}" +
+        ".bam_nav a{text-decoration:none}" +
+        ".bam_nav_enclos{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}" +
+        ".bam_nav_bouton{padding:3px 10px;border:1px solid #D19260;border-radius:12px;background:#F7E3C0;color:#6b3d16;font-weight:bold;font-size:11px}" +
+        ".bam_nav_bouton:hover{background:#D19260;color:#fff}" +
+        ".bam_nav_criteres{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}" +
+        ".bam_pastille{display:inline-flex;align-items:center;gap:6px;padding:2px 4px;border:1px solid;border-radius:14px;font-size:11px;font-weight:bold}" +
+        ".bam_pastille .bam_compte{min-width:16px;padding:0 4px;border-radius:8px;color:#fff;text-align:center}" +
+        ".bam_pastille .bam_fleche{width:18px;height:18px;line-height:18px;border-radius:50%;text-align:center;color:inherit}" +
+        ".bam_pastille a.bam_fleche:hover{background:rgba(0,0,0,.12)}" +
+        ".bam_pastille span.bam_fleche{opacity:.25}" +
+        ".bam_verif{background:#fff3d6;border-color:#d39b2a;color:#8a5a00}.bam_verif .bam_compte{background:#d39b2a}" +
+        ".bam_mourant{background:#fde3df;border-color:#c0392b;color:#8e2418}.bam_mourant .bam_compte{background:#c0392b}" +
+        ".bam_naissance{background:#e3f4dc;border-color:#4a9a3a;color:#2e6b22}.bam_naissance .bam_compte{background:#4a9a3a}",
+    );
+    htmlLiens +=
+        ("debut" != precedent.t ? lienEnclos(precedent, "◀ " + libelleEnclos(precedent.t + "_" + precedent.v), "bam_nav_bouton") : "<span></span>") +
+        ("fin" != suivant.t ? lienEnclos(suivant, libelleEnclos(suivant.t + "_" + suivant.v) + " ▶", "bam_nav_bouton") : "<span></span>") +
+        '</div><div class="bam_nav_criteres">';
+    // Une pastille « ◀ libellé (nombre d'enclos) ▶ » par critère, seulement s'il existe un autre enclos qui y répond
+    [
+        ["a_verifier", "À vérifier", "bam_verif"],
+        ["mourant", "Avec mourant", "bam_mourant"],
+        [
+            function (cleEnclos) {
+                // Enclos ouvert depuis la mise à jour : on sait s'il a un nouveau-né ;
+                // sinon, on suppose une naissance s'il contient une espèce née d'après le rapport
+                return "boolean" == typeof parc.encls[cleEnclos].naissance
+                    ? parc.encls[cleEnclos].naissance
+                    : Object.keys(parc.encls[cleEnclos].animaux || {}).some(function (nomEspece) {
+                        return especesNees.indexOf(nomEspece) != -1;
+                    });
+            },
+            "Avec naissance",
+            "bam_naissance",
+        ],
+    ].forEach(function (critere) {
+        var precedentAvec = enclosPrecedentAvec(refEnclos, critere[0]),
+            suivantAvec = enclosSuivantAvec(refEnclos, critere[0]),
+            nombre = Object.keys(parc.encls).filter(function (cleEnclos) {
+                return "function" == typeof critere[0] ? critere[0](cleEnclos) : !0 === parc.encls[cleEnclos][critere[0]];
+            }).length;
+        ("debut" == precedentAvec.t && "fin" == suivantAvec.t) ||
+        (htmlLiens +=
+            '<span class="bam_pastille ' + critere[2] + '">' +
+            ("debut" != precedentAvec.t ? lienEnclos(precedentAvec, "◀", "bam_fleche") : '<span class="bam_fleche">◀</span>') +
+            critere[1] +
+            ' <span class="bam_compte" title="Nombre d&#39;enclos">' + nombre + "</span>" +
+            ("fin" != suivantAvec.t ? lienEnclos(suivantAvec, "▶", "bam_fleche") : '<span class="bam_fleche">▶</span>') +
+            "</span>");
+    });
+    htmlLiens += "</div></div>";
     var ligneLiens = parBalise("tbody", (tables = parBalise("table"))[1])[0].insertRow(0),
         cellule = ligneLiens.insertCell(0);
     ((cellule.colSpan = 2), (cellule.innerHTML = htmlLiens));
@@ -5047,7 +5091,7 @@ var pageCourante,
     elementsTemp,
     valeurTemp,
     urlBase = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1),
-    versionScript = "3.19.0",
+    versionScript = "3.20.0",
     dateJeu = GM_getValue("aujourd_hui", !1),
     heureJeu = GM_getValue("heure", !1),
     listeZoos = JSON.parse(GM_getValue("liste_zoos", "[]")),
@@ -6572,6 +6616,7 @@ if (
                     } else
                         (journaliser("Enclos " + libelleEnclos(idEnclos) + " vide"),
                             (parc.encls[idEnclos].mourant = !1),
+                            (parc.encls[idEnclos].naissance = !1),
                             (parc.encls[idEnclos].animaux = {}),
                         scanMajEnCours || afficherTableauPopulation());
                     if (paPasAJour && !GM_getValue("PAtsenclos2", !1))
